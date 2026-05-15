@@ -49,5 +49,7 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
     assert "🕒 เวลา: 2026-05-15T16:22:53Z" in message
     assert "📈 Trend: ขาขึ้นแข็งแรง" in message
     assert "🗞️ Tone: บวก (+2)" in message
+    assert "🔥 ข่าวบวกแรง" in message
+    assert "opportunity 6" in message
     assert "⚠️ จุดที่ต้องระวัง:" in message
     assert "ไม่ใช่การการันตี" in message

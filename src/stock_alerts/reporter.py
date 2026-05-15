@@ -72,7 +72,8 @@ def _format_digest_report(index: int, report: StockReport) -> list[str]:
         "━━━━━━━━━━━━━━",
         f"#{index} 📌 {report.profile.ticker} - {report.profile.name}",
         f"🏢 {report.profile.business}",
-        f"🧠 {signal.stance} | score {signal.score}",
+        f"🧠 {signal.stance} | technical {signal.score} | opportunity {_calculate_opportunity_score(report)}",
+        f"🏷️ {_format_tags(report)}",
         f"📈 Trend: {signal.trend}",
         f"💰 {signal.close_price:,.2f} ({signal.change_percent:+.2f}%)",
         f"📊 {_format_indicators(signal)}",
@@ -143,6 +144,37 @@ def _format_sentiment(sentiment: str, score: int) -> str:
         "negative": "ลบ",
     }
     return f"{labels.get(sentiment, sentiment)} ({score:+d})"
+
+
+def _format_tags(report: StockReport) -> str:
+    tags: list[str] = []
+    opportunity_score = _calculate_opportunity_score(report)
+    strongest_news_score = _strongest_news_score(report)
+
+    if opportunity_score >= 7:
+        tags.append("🚀 น่าสนใจมาก")
+    elif opportunity_score >= 4:
+        tags.append("👀 น่าจับตา")
+
+    if strongest_news_score >= 2:
+        tags.append("🔥 ข่าวบวกแรง")
+    elif strongest_news_score <= -2:
+        tags.append("⚠️ ข่าวลบแรง")
+
+    if report.signal.trend == "ขาขึ้นแข็งแรง":
+        tags.append("📈 trend แข็งแรง")
+    if report.signal.risk_flags:
+        tags.append("🛡️ เช็กความเสี่ยง")
+
+    return " | ".join(tags) if tags else "รอติดตามต่อ"
+
+
+def _calculate_opportunity_score(report: StockReport) -> int:
+    return report.signal.score + _strongest_news_score(report)
+
+
+def _strongest_news_score(report: StockReport) -> int:
+    return max((news_item.sentiment_score for news_item in report.news), default=0)
 
 
 def _format_optional(value: float | None) -> str:

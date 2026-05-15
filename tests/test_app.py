@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from stock_alerts.app import run_once
-from stock_alerts.models import StockProfile, StockReport, TechnicalSignal
+from stock_alerts.models import NewsItem, StockProfile, StockReport, TechnicalSignal
 
 
 def test_run_once_fetches_news_only_for_selected_reports(monkeypatch) -> None:
@@ -62,6 +62,46 @@ def test_run_once_sends_all_matched_reports_when_limit_is_disabled(monkeypatch) 
     assert sent_count == 3
     assert fetched_news_for == ["AAA", "BBB", "CCC"]
     assert len(sent_messages) == 1
+
+
+def test_run_once_sorts_digest_by_news_adjusted_opportunity(monkeypatch) -> None:
+    reports = {
+        "TECH": _build_report("TECH", score=5, change_percent=1.0),
+        "NEWS": _build_report("NEWS", score=4, change_percent=0.5),
+    }
+
+    def fake_fetch_news(ticker: str, limit: int):
+        if ticker == "NEWS":
+            return (
+                NewsItem(
+                    title="NEWS beats profit estimates and raises guidance",
+                    link="https://example.com/news",
+                    summary="NEWS beats profit estimates and raises guidance.",
+                    sentiment="positive",
+                    sentiment_score=3,
+                ),
+            )
+        return ()
+
+    sent_messages: list[str] = []
+    monkeypatch.setattr("stock_alerts.app.build_technical_report", lambda profile: reports[profile.ticker])
+    monkeypatch.setattr("stock_alerts.app.fetch_news", fake_fetch_news)
+    monkeypatch.setattr(
+        "stock_alerts.app.send_telegram_message",
+        lambda bot_token, chat_id, text: sent_messages.append(text),
+    )
+
+    run_once(
+        profiles=[StockProfile(ticker=ticker, name=ticker, business="Test") for ticker in reports],
+        bot_token="token",
+        chat_id="chat",
+        max_news_per_symbol=3,
+        min_score_to_alert=2,
+        top_alerts_per_run=None,
+    )
+
+    assert sent_messages
+    assert sent_messages[0].find("#1 📌 NEWS") < sent_messages[0].find("#2 📌 TECH")
 
 
 def _build_report(ticker: str, score: int, change_percent: float) -> StockReport:

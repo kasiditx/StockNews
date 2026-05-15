@@ -58,6 +58,7 @@ def run_once(
     enriched_reports = [
         attach_news(report, max_news_per_symbol=max_news_per_symbol) for report in selected_reports
     ]
+    enriched_reports = _sort_reports_by_opportunity(enriched_reports)
     message_count = _count_chunks(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE)
     LOGGER.info("Sending %s Telegram digest message(s)", message_count)
     for message_index, report_chunk in enumerate(
@@ -136,6 +137,23 @@ def _select_reports(reports: list[StockReport], limit: int | None) -> list[Stock
     if limit is None:
         return sorted_reports
     return sorted_reports[:limit]
+
+
+def _sort_reports_by_opportunity(reports: list[StockReport]) -> list[StockReport]:
+    return sorted(
+        reports,
+        key=lambda report: (
+            _calculate_opportunity_score(report),
+            report.signal.score,
+            report.signal.change_percent,
+        ),
+        reverse=True,
+    )
+
+
+def _calculate_opportunity_score(report: StockReport) -> int:
+    strongest_news_score = max((news_item.sentiment_score for news_item in report.news), default=0)
+    return report.signal.score + strongest_news_score
 
 
 def _chunk_reports(reports: list[StockReport], chunk_size: int) -> list[list[StockReport]]:

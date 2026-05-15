@@ -10,6 +10,7 @@
 - วิเคราะห์แนวโน้มด้วย SMA, RSI, MACD, ADX, ATR, Bollinger position, volume และ breakout
 - ดึงข่าวล่าสุดต่อ ticker จาก Yahoo Finance RSS
 - สรุปข่าวและประเมิน tone ข่าวแบบโปร่งใสจากคำสำคัญในหัวข้อ/summary
+- จัดอันดับด้วย opportunity score หลังรวม technical score และ news tone
 - สรุปว่าแต่ละบริษัททำธุรกิจอะไรจากไฟล์ config ที่ผู้ใช้กำหนดเอง
 - ให้คะแนน signal แบบโปร่งใส พร้อมเหตุผลว่าทำไมควรจับตา
 - ส่ง Telegram เป็น digest จัดอันดับเฉพาะตัวที่ score ถึง threshold
@@ -58,6 +59,7 @@ TOP_ALERTS_PER_RUN=0
 - `TOP_ALERTS_PER_RUN=0` ส่งทุกตัวที่เข้าเกณฑ์ ถ้าใส่เลขมากกว่า 0 จะจำกัดจำนวนต่อรอบ
 - ระบบแบ่ง Telegram digest เป็นชุดละ 10 ตัว เพื่อไม่ให้ข้อความยาวเกิน
 - ข่าวจะถูกดึงเฉพาะหุ้นที่ผ่าน ranking แล้ว ไม่ดึงข่าวทุกตัวใน universe
+- Digest จะติด tag เช่น `🚀 น่าสนใจมาก`, `🔥 ข่าวบวกแรง`, `⚠️ ข่าวลบแรง`, `📈 trend แข็งแรง`
 
 ตัวอย่างไฟล์ `config/universe.th.csv`:
 
