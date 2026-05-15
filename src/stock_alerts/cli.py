@@ -7,6 +7,7 @@ from pathlib import Path
 from stock_alerts.app import run_once, watch
 from stock_alerts.config import (
     DEFAULT_ALERT_INTERVAL_MINUTES,
+    DEFAULT_MAX_NEWS_LOOKUPS_PER_RUN,
     DEFAULT_MAX_NEWS_PER_SYMBOL,
     DEFAULT_MIN_SCORE_TO_ALERT,
     DEFAULT_TOP_ALERTS_PER_RUN,
@@ -32,6 +33,10 @@ def main() -> None:
         bot_token = get_required_env("TELEGRAM_BOT_TOKEN")
         chat_id = get_required_env("TELEGRAM_CHAT_ID")
         max_news_per_symbol = get_int_env("MAX_NEWS_PER_SYMBOL", DEFAULT_MAX_NEWS_PER_SYMBOL)
+        max_news_lookups_per_run = get_optional_int_env(
+            "MAX_NEWS_LOOKUPS_PER_RUN",
+            DEFAULT_MAX_NEWS_LOOKUPS_PER_RUN,
+        )
         min_score_to_alert = get_int_env("MIN_SCORE_TO_ALERT", DEFAULT_MIN_SCORE_TO_ALERT)
         top_alerts_per_run = get_optional_int_env("TOP_ALERTS_PER_RUN", DEFAULT_TOP_ALERTS_PER_RUN)
 
@@ -41,6 +46,7 @@ def main() -> None:
                 bot_token=bot_token,
                 chat_id=chat_id,
                 max_news_per_symbol=max_news_per_symbol,
+                max_news_lookups_per_run=max_news_lookups_per_run,
                 min_score_to_alert=min_score_to_alert,
                 top_alerts_per_run=top_alerts_per_run,
             )
@@ -53,6 +59,7 @@ def main() -> None:
             bot_token=bot_token,
             chat_id=chat_id,
             max_news_per_symbol=max_news_per_symbol,
+            max_news_lookups_per_run=max_news_lookups_per_run,
             min_score_to_alert=min_score_to_alert,
             top_alerts_per_run=top_alerts_per_run,
             interval_minutes=interval_minutes,

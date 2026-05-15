@@ -21,6 +21,7 @@ def run_once(
     bot_token: str,
     chat_id: str,
     max_news_per_symbol: int,
+    max_news_lookups_per_run: int | None,
     min_score_to_alert: int,
     top_alerts_per_run: int | None,
 ) -> int:
@@ -62,12 +63,17 @@ def run_once(
         return 0
 
     LOGGER.info(
-        "Preparing digest for %s matched stock(s); fetching news for selected reports",
+        "Preparing digest for %s matched stock(s); fetching news for up to %s report(s)",
         len(selected_reports),
+        max_news_lookups_per_run if max_news_lookups_per_run is not None else "all",
     )
-    enriched_reports = [
-        attach_news(report, max_news_per_symbol=max_news_per_symbol) for report in selected_reports
-    ]
+    enriched_reports, unavailable_news_count = attach_news_to_reports(
+        selected_reports,
+        max_news_per_symbol=max_news_per_symbol,
+        max_news_lookups_per_run=max_news_lookups_per_run,
+    )
+    if unavailable_news_count:
+        LOGGER.info("News unavailable for %s selected stock(s)", unavailable_news_count)
     enriched_reports = _sort_reports_by_opportunity(enriched_reports)
     message_count = _count_chunks(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE)
     LOGGER.info("Sending %s Telegram digest message(s)", message_count)
@@ -94,6 +100,7 @@ def watch(
     bot_token: str,
     chat_id: str,
     max_news_per_symbol: int,
+    max_news_lookups_per_run: int | None,
     min_score_to_alert: int,
     top_alerts_per_run: int | None,
     interval_minutes: int,
@@ -104,6 +111,7 @@ def watch(
             bot_token=bot_token,
             chat_id=chat_id,
             max_news_per_symbol=max_news_per_symbol,
+            max_news_lookups_per_run=max_news_lookups_per_run,
             min_score_to_alert=min_score_to_alert,
             top_alerts_per_run=top_alerts_per_run,
         )
@@ -113,7 +121,34 @@ def watch(
 
 def build_stock_report(profile: StockProfile, max_news_per_symbol: int) -> StockReport:
     report = build_technical_report(profile)
-    return attach_news(report, max_news_per_symbol=max_news_per_symbol)
+    enriched_report, _ = attach_news(report, max_news_per_symbol=max_news_per_symbol)
+    return enriched_report
+
+
+def attach_news_to_reports(
+    reports: list[StockReport],
+    max_news_per_symbol: int,
+    max_news_lookups_per_run: int | None,
+) -> tuple[list[StockReport], int]:
+    if max_news_per_symbol <= 0 or max_news_lookups_per_run == 0:
+        return reports, 0
+
+    news_lookup_limit = len(reports) if max_news_lookups_per_run is None else max_news_lookups_per_run
+    enriched_reports: list[StockReport] = []
+    unavailable_news_count = 0
+    for index, report in enumerate(reports):
+        if index >= news_lookup_limit:
+            enriched_reports.append(report)
+            continue
+
+        enriched_report, news_available = attach_news(
+            report,
+            max_news_per_symbol=max_news_per_symbol,
+        )
+        if not news_available:
+            unavailable_news_count += 1
+        enriched_reports.append(enriched_report)
+    return enriched_reports, unavailable_news_count
 
 
 def build_technical_report(profile: StockProfile) -> StockReport:
@@ -122,16 +157,16 @@ def build_technical_report(profile: StockProfile) -> StockReport:
     return StockReport(profile=profile, signal=signal, news=())
 
 
-def attach_news(report: StockReport, max_news_per_symbol: int) -> StockReport:
+def attach_news(report: StockReport, max_news_per_symbol: int) -> tuple[StockReport, bool]:
     if max_news_per_symbol <= 0:
-        return report
+        return report, True
 
     try:
         news = fetch_news(report.profile.ticker, max_news_per_symbol)
     except NewsFetchError as exc:
-        LOGGER.warning("News unavailable for %s: %s", report.profile.ticker, exc)
-        news = ()
-    return StockReport(profile=report.profile, signal=report.signal, news=news)
+        LOGGER.debug("News unavailable for %s: %s", report.profile.ticker, exc)
+        return StockReport(profile=report.profile, signal=report.signal, news=()), False
+    return StockReport(profile=report.profile, signal=report.signal, news=news), bool(news)
 
 
 def _select_reports(reports: list[StockReport], limit: int | None) -> list[StockReport]:

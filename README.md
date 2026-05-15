@@ -47,6 +47,7 @@ STOCK_WATCHLIST=ALL
 STOCK_UNIVERSE=US
 MAX_SYMBOLS_PER_RUN=0
 TOP_ALERTS_PER_RUN=0
+MAX_NEWS_LOOKUPS_PER_RUN=50
 ```
 
 รายละเอียด:
@@ -61,6 +62,7 @@ TOP_ALERTS_PER_RUN=0
 - ระบบแบ่ง Telegram digest เป็นชุดละ 10 ตัว เพื่อไม่ให้ข้อความยาวเกิน
 - ข่าวจะถูกดึงเฉพาะหุ้นที่ผ่าน ranking แล้ว ไม่ดึงข่าวทุกตัวใน universe
 - Digest จะติด tag เช่น `🚀 น่าสนใจมาก`, `🔥 ข่าวบวกแรง`, `⚠️ ข่าวลบแรง`, `📈 trend แข็งแรง`
+- `MAX_NEWS_LOOKUPS_PER_RUN` จำกัดจำนวนหุ้นที่ไปดึงข่าวต่อรอบหลังผ่าน technical filter เพื่อลดการโดน Yahoo rate limit
 
 ตัวอย่างไฟล์ `config/universe.th.csv`:
 
