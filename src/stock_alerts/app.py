@@ -25,17 +25,21 @@ def run_once(
     top_alerts_per_run: int | None,
 ) -> int:
     scanned_count = 0
+    below_threshold_count = 0
+    skipped_count = 0
     matched_reports: list[StockReport] = []
     for profile in profiles:
         scanned_count += 1
         try:
             report = build_technical_report(profile)
         except (MarketDataError, ValueError) as exc:
-            LOGGER.warning("Skipping %s: %s", profile.ticker, exc)
+            skipped_count += 1
+            LOGGER.debug("Skipping %s: %s", profile.ticker, exc)
             continue
 
         if report.signal.score < min_score_to_alert:
-            LOGGER.info(
+            below_threshold_count += 1
+            LOGGER.debug(
                 "Skipping %s because score %s is below threshold %s",
                 profile.ticker,
                 report.signal.score,
@@ -45,7 +49,13 @@ def run_once(
 
         matched_reports.append(report)
 
-    LOGGER.info("Scanned %s stock(s)", scanned_count)
+    LOGGER.info(
+        "Scanned %s stock(s): %s matched, %s below threshold, %s skipped",
+        scanned_count,
+        len(matched_reports),
+        below_threshold_count,
+        skipped_count,
+    )
     selected_reports = _select_reports(matched_reports, top_alerts_per_run)
     if not selected_reports:
         LOGGER.info("No stocks matched the alert threshold")

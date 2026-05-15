@@ -13,6 +13,21 @@ NASDAQ_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/SymDir/nasdaqlisted.tx
 OTHER_LISTED_URL = "https://www.nasdaqtrader.com/dynamic/SymDir/otherlisted.txt"
 REQUEST_TIMEOUT_SECONDS = 30
 SUPPORTED_MARKETS = frozenset({"US", "TH"})
+EXCLUDED_SYMBOL_SUFFIXES = ("R", "U", "W")
+EXCLUDED_SYMBOL_MARKERS = ("$", "^", "/")
+EXCLUDED_SECURITY_NAME_TERMS = (
+    " warrant",
+    " warr",
+    " unit",
+    " right",
+    " preferred",
+    " preference",
+    " depositary share",
+    " notes",
+    " note ",
+    " bond",
+    " debenture",
+)
 
 
 class UniverseError(RuntimeError):
@@ -52,7 +67,7 @@ def load_us_profiles() -> list[StockProfile]:
             continue
         symbol = row.get("Symbol", "").strip()
         security_name = row.get("Security Name", "").strip()
-        if symbol and security_name:
+        if _is_supported_us_common_stock(symbol=symbol, security_name=security_name):
             profiles.append(
                 StockProfile(
                     ticker=_to_yahoo_us_ticker(symbol),
@@ -66,7 +81,7 @@ def load_us_profiles() -> list[StockProfile]:
             continue
         symbol = row.get("ACT Symbol", "").strip()
         security_name = row.get("Security Name", "").strip()
-        if symbol and security_name:
+        if _is_supported_us_common_stock(symbol=symbol, security_name=security_name):
             profiles.append(
                 StockProfile(
                     ticker=_to_yahoo_us_ticker(symbol),
@@ -141,6 +156,19 @@ def _normalize_thai_ticker(ticker: str) -> str:
 
 def _to_yahoo_us_ticker(symbol: str) -> str:
     return symbol.strip().upper().replace(".", "-")
+
+
+def _is_supported_us_common_stock(symbol: str, security_name: str) -> bool:
+    if not symbol or not security_name:
+        return False
+
+    normalized_symbol = symbol.strip().upper()
+    normalized_name = f" {security_name.strip().lower()} "
+    if any(marker in normalized_symbol for marker in EXCLUDED_SYMBOL_MARKERS):
+        return False
+    if normalized_symbol.endswith(EXCLUDED_SYMBOL_SUFFIXES):
+        return False
+    return not any(term in normalized_name for term in EXCLUDED_SECURITY_NAME_TERMS)
 
 
 def _deduplicate_profiles(profiles: Iterable[StockProfile]) -> tuple[StockProfile, ...]:

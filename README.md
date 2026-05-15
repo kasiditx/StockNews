@@ -52,6 +52,7 @@ TOP_ALERTS_PER_RUN=0
 รายละเอียด:
 
 - `US` ดึงรายชื่อหุ้นจาก Nasdaq Trader symbol directory และกรอง ETF/test issue ออก
+- Universe US จะกรอง preferred, warrant, unit, right และ instrument ที่ไม่ใช่ common stock ออก เพื่อลด ticker ที่ Yahoo ไม่มีราคา
 - ถ้าต้องการรวมไทยด้วย ให้ตั้ง `STOCK_UNIVERSE=US,TH` และสร้างไฟล์ `config/universe.th.csv` ก่อน
 - `TH` โหลดจากไฟล์ `config/universe.th.csv` โดยต้องมี columns `ticker,name,business`
 - ใช้ `config/universe.th.example.csv` เป็นตัวอย่าง แล้วสร้าง `config/universe.th.csv` สำหรับรายชื่อจริง
