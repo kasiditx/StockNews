@@ -17,6 +17,7 @@ DEFAULT_MIN_SCORE_TO_ALERT = 2
 DEFAULT_MAX_SYMBOLS_PER_RUN = 300
 DEFAULT_STOCK_UNIVERSE = "US,TH"
 DEFAULT_THAI_UNIVERSE_PATH = Path("config/universe.th.csv")
+DEFAULT_WATCHLIST_PATH = Path("config/watchlist.json")
 ALL_STOCKS_SENTINELS = frozenset({"ALL", "*"})
 
 
@@ -51,24 +52,31 @@ def get_int_env(name: str, default: int) -> int:
 
 
 def load_watchlist(watchlist_path: Path | None) -> tuple[StockProfile, ...]:
+    if watchlist_path is not None:
+        if not watchlist_path.exists():
+            raise ConfigError(f"Watchlist file not found: {watchlist_path}")
+        return _load_watchlist_file(watchlist_path)
+
     stock_watchlist = os.getenv("STOCK_WATCHLIST", "").strip()
     if stock_watchlist.upper() in ALL_STOCKS_SENTINELS:
         return _load_all_stock_universe()
-
-    if watchlist_path is not None and watchlist_path.exists():
-        return _load_watchlist_file(watchlist_path)
 
     tickers = [
         ticker.strip().upper()
         for ticker in stock_watchlist.split(",")
         if ticker.strip()
     ]
-    if not tickers:
-        raise ConfigError(
-            "No stock watchlist configured. Set STOCK_WATCHLIST or create config/watchlist.json"
+    if tickers:
+        return tuple(
+            StockProfile(ticker=ticker, name=ticker, business="Not configured") for ticker in tickers
         )
 
-    return tuple(StockProfile(ticker=ticker, name=ticker, business="Not configured") for ticker in tickers)
+    if DEFAULT_WATCHLIST_PATH.exists():
+        return _load_watchlist_file(DEFAULT_WATCHLIST_PATH)
+
+    raise ConfigError(
+        "No stock watchlist configured. Set STOCK_WATCHLIST or create config/watchlist.json"
+    )
 
 
 def _load_all_stock_universe() -> tuple[StockProfile, ...]:

@@ -21,3 +21,12 @@ def test_watchlist_argument_is_supported_after_command() -> None:
 
     assert args.command == "watch"
     assert args.watchlist == Path("config/custom.json")
+
+
+def test_watchlist_argument_is_optional() -> None:
+    parser = _build_parser()
+
+    args = parser.parse_args(["watch"])
+
+    assert args.command == "watch"
+    assert args.watchlist is None

@@ -9,6 +9,7 @@ from stock_alerts.config import (
     DEFAULT_ALERT_INTERVAL_MINUTES,
     DEFAULT_MAX_NEWS_PER_SYMBOL,
     DEFAULT_MIN_SCORE_TO_ALERT,
+    DEFAULT_WATCHLIST_PATH,
     ConfigError,
     get_int_env,
     get_required_env,
@@ -60,7 +61,7 @@ def _build_parser() -> argparse.ArgumentParser:
     _add_watchlist_argument(command_options, default=argparse.SUPPRESS)
 
     parser = argparse.ArgumentParser(description="Send Telegram stock alerts.")
-    _add_watchlist_argument(parser, default=Path("config/watchlist.json"))
+    _add_watchlist_argument(parser, default=None)
 
     subparsers = parser.add_subparsers(dest="command", required=True)
     subparsers.add_parser(
@@ -78,11 +79,14 @@ def _build_parser() -> argparse.ArgumentParser:
 
 def _add_watchlist_argument(
     parser: argparse.ArgumentParser,
-    default: Path | str,
+    default: Path | str | None,
 ) -> None:
     parser.add_argument(
         "--watchlist",
         type=Path,
         default=default,
-        help="Path to watchlist JSON. Falls back to STOCK_WATCHLIST when the file does not exist.",
+        help=(
+            "Path to watchlist JSON. Defaults to "
+            f"{DEFAULT_WATCHLIST_PATH} when STOCK_WATCHLIST is not configured."
+        ),
     )
