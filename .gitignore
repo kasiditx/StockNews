@@ -28,6 +28,7 @@ config/watchlist.json
 config/universe.th.csv
 
 # Logs and OS/editor files
+logs/
 *.log
 .DS_Store
 .idea/

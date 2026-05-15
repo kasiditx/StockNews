@@ -108,6 +108,35 @@ python -m stock_alerts run-once --watchlist config/watchlist.json
 python -m stock_alerts watch --watchlist config/watchlist.json
 ```
 
+## รันตลอดแบบ Background บน macOS
+
+ติดตั้งเป็น LaunchAgent เพื่อให้รันต่อหลังปิด terminal และเริ่มใหม่ตอน login:
+
+```bash
+./scripts/install_launch_agent.sh
+```
+
+Installer จะ sync runtime copy ไปที่ `~/.stock-news-alert` เพื่อเลี่ยง macOS permission ของโฟลเดอร์ `Documents`
+
+ดูสถานะและ log ล่าสุด:
+
+```bash
+./scripts/status_launch_agent.sh
+```
+
+หยุดและถอด service:
+
+```bash
+./scripts/uninstall_launch_agent.sh
+```
+
+Log จะอยู่ที่:
+
+```text
+~/.stock-news-alert/logs/stock-news.out.log
+~/.stock-news-alert/logs/stock-news.err.log
+```
+
 ## ตรวจคุณภาพ
 
 ```bash
