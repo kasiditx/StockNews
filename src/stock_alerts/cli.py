@@ -56,15 +56,33 @@ def main() -> None:
 
 
 def _build_parser() -> argparse.ArgumentParser:
+    command_options = argparse.ArgumentParser(add_help=False)
+    _add_watchlist_argument(command_options, default=argparse.SUPPRESS)
+
     parser = argparse.ArgumentParser(description="Send Telegram stock alerts.")
+    _add_watchlist_argument(parser, default=Path("config/watchlist.json"))
+
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers.add_parser(
+        "run-once",
+        parents=[command_options],
+        help="Analyze configured stocks once and send matching alerts.",
+    )
+    subparsers.add_parser(
+        "watch",
+        parents=[command_options],
+        help="Keep analyzing and sending alerts on an interval.",
+    )
+    return parser
+
+
+def _add_watchlist_argument(
+    parser: argparse.ArgumentParser,
+    default: Path | str,
+) -> None:
     parser.add_argument(
         "--watchlist",
         type=Path,
-        default=Path("config/watchlist.json"),
+        default=default,
         help="Path to watchlist JSON. Falls back to STOCK_WATCHLIST when the file does not exist.",
     )
-
-    subparsers = parser.add_subparsers(dest="command", required=True)
-    subparsers.add_parser("run-once", help="Analyze configured stocks once and send matching alerts.")
-    subparsers.add_parser("watch", help="Keep analyzing and sending alerts on an interval.")
-    return parser
