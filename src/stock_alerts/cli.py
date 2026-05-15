@@ -9,6 +9,7 @@ from stock_alerts.config import (
     DEFAULT_ALERT_INTERVAL_MINUTES,
     DEFAULT_MAX_NEWS_PER_SYMBOL,
     DEFAULT_MIN_SCORE_TO_ALERT,
+    DEFAULT_TOP_ALERTS_PER_RUN,
     DEFAULT_WATCHLIST_PATH,
     ConfigError,
     get_int_env,
@@ -31,6 +32,7 @@ def main() -> None:
         chat_id = get_required_env("TELEGRAM_CHAT_ID")
         max_news_per_symbol = get_int_env("MAX_NEWS_PER_SYMBOL", DEFAULT_MAX_NEWS_PER_SYMBOL)
         min_score_to_alert = get_int_env("MIN_SCORE_TO_ALERT", DEFAULT_MIN_SCORE_TO_ALERT)
+        top_alerts_per_run = get_int_env("TOP_ALERTS_PER_RUN", DEFAULT_TOP_ALERTS_PER_RUN)
 
         if args.command == "run-once":
             sent_count = run_once(
@@ -39,6 +41,7 @@ def main() -> None:
                 chat_id=chat_id,
                 max_news_per_symbol=max_news_per_symbol,
                 min_score_to_alert=min_score_to_alert,
+                top_alerts_per_run=top_alerts_per_run,
             )
             logging.info("Sent %s Telegram alert(s)", sent_count)
             return
@@ -50,6 +53,7 @@ def main() -> None:
             chat_id=chat_id,
             max_news_per_symbol=max_news_per_symbol,
             min_score_to_alert=min_score_to_alert,
+            top_alerts_per_run=top_alerts_per_run,
             interval_minutes=interval_minutes,
         )
     except ConfigError as exc:

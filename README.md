@@ -11,7 +11,7 @@
 - ดึงข่าวล่าสุดต่อ ticker จาก Yahoo Finance RSS
 - สรุปว่าแต่ละบริษัททำธุรกิจอะไรจากไฟล์ config ที่ผู้ใช้กำหนดเอง
 - ให้คะแนน signal แบบโปร่งใส พร้อมเหตุผลว่าทำไมควรจับตา
-- ส่ง Telegram เฉพาะตัวที่ score ถึง threshold
+- ส่ง Telegram เป็น digest จัดอันดับเฉพาะตัวที่ score ถึง threshold
 
 ## ติดตั้ง
 
@@ -43,6 +43,7 @@ STOCK_WATCHLIST=PTT.BK,AOT.BK,NVDA
 STOCK_WATCHLIST=ALL
 STOCK_UNIVERSE=US,TH
 MAX_SYMBOLS_PER_RUN=300
+TOP_ALERTS_PER_RUN=10
 ```
 
 รายละเอียด:
@@ -51,6 +52,7 @@ MAX_SYMBOLS_PER_RUN=300
 - `TH` โหลดจากไฟล์ `config/universe.th.csv` โดยต้องมี columns `ticker,name,business`
 - ใช้ `config/universe.th.example.csv` เป็นตัวอย่าง แล้วสร้าง `config/universe.th.csv` สำหรับรายชื่อจริง
 - `MAX_SYMBOLS_PER_RUN` เป็น safety cap กัน runtime ยาวและ provider rate limit ถ้าตั้ง `0` คือไม่จำกัด
+- `TOP_ALERTS_PER_RUN` จำกัดจำนวนหุ้นเด่นสุดที่จะส่งใน Telegram ต่อรอบ
 
 ตัวอย่างไฟล์ `config/universe.th.csv`:
 
@@ -87,3 +89,4 @@ pytest
 - อย่า commit `.env` เพราะมี Telegram token
 - ถ้าข่าวไม่ขึ้น อาจเป็นข้อจำกัดของ Yahoo Finance RSS หรือ ticker ไม่รองรับ
 - Technical signal ไม่ได้ทำนายอนาคต เป็นเพียงตัวช่วยกรองหุ้นที่ควรตรวจต่อ
+- ระบบจะไม่ฟันธงว่า “ขึ้นแน่” หรือ “กำไร 100-200%” แต่จะช่วยจัดอันดับ candidate ที่ควรศึกษาต่อจากราคา, momentum, volume และข่าว
