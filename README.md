@@ -33,6 +33,36 @@ STOCK_WATCHLIST=PTT.BK,AOT.BK,NVDA
 
 หรือใช้ `config/watchlist.json` เพื่อใส่ชื่อบริษัทและธุรกิจให้ละเอียดขึ้น
 
+## ใช้รายชื่อหุ้นจำนวนมาก
+
+ไม่ควรใส่หุ้นทุกตัวลง `STOCK_WATCHLIST=` โดยตรง เพราะ env var จะยาวมาก ดูแลยาก และอาจทำให้ระบบยิง request หลายพันตัวในรอบเดียว
+
+ถ้าต้องการสแกน universe กว้าง ๆ ให้ใช้:
+
+```bash
+STOCK_WATCHLIST=ALL
+STOCK_UNIVERSE=US,TH
+MAX_SYMBOLS_PER_RUN=300
+```
+
+รายละเอียด:
+
+- `US` ดึงรายชื่อหุ้นจาก Nasdaq Trader symbol directory และกรอง ETF/test issue ออก
+- `TH` โหลดจากไฟล์ `config/universe.th.csv` โดยต้องมี columns `ticker,name,business`
+- ใช้ `config/universe.th.example.csv` เป็นตัวอย่าง แล้วสร้าง `config/universe.th.csv` สำหรับรายชื่อจริง
+- `MAX_SYMBOLS_PER_RUN` เป็น safety cap กัน runtime ยาวและ provider rate limit ถ้าตั้ง `0` คือไม่จำกัด
+
+ตัวอย่างไฟล์ `config/universe.th.csv`:
+
+```csv
+ticker,name,business
+PTT,PTT,Energy and petroleum business
+AOT,Airports of Thailand,Airport operator
+ADVANC,Advanced Info Service,Telecommunications
+```
+
+ระบบจะเติม `.BK` ให้อัตโนมัติสำหรับ ticker ไทยที่ยังไม่มี suffix
+
 ## รันทันทีหนึ่งรอบ
 
 ```bash

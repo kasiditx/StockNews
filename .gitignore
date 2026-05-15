@@ -25,6 +25,7 @@ coverage.xml
 
 # Local runtime config
 config/watchlist.json
+config/universe.th.csv
 
 # Logs and OS/editor files
 *.log

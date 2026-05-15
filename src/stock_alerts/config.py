@@ -8,11 +8,16 @@ from typing import Any
 from dotenv import load_dotenv
 
 from stock_alerts.models import StockProfile
+from stock_alerts.universe import UniverseError, load_universe_profiles, parse_markets
 
 
 DEFAULT_ALERT_INTERVAL_MINUTES = 60
 DEFAULT_MAX_NEWS_PER_SYMBOL = 3
 DEFAULT_MIN_SCORE_TO_ALERT = 2
+DEFAULT_MAX_SYMBOLS_PER_RUN = 300
+DEFAULT_STOCK_UNIVERSE = "US,TH"
+DEFAULT_THAI_UNIVERSE_PATH = Path("config/universe.th.csv")
+ALL_STOCKS_SENTINELS = frozenset({"ALL", "*"})
 
 
 class ConfigError(ValueError):
@@ -46,12 +51,16 @@ def get_int_env(name: str, default: int) -> int:
 
 
 def load_watchlist(watchlist_path: Path | None) -> tuple[StockProfile, ...]:
+    stock_watchlist = os.getenv("STOCK_WATCHLIST", "").strip()
+    if stock_watchlist.upper() in ALL_STOCKS_SENTINELS:
+        return _load_all_stock_universe()
+
     if watchlist_path is not None and watchlist_path.exists():
         return _load_watchlist_file(watchlist_path)
 
     tickers = [
         ticker.strip().upper()
-        for ticker in os.getenv("STOCK_WATCHLIST", "").split(",")
+        for ticker in stock_watchlist.split(",")
         if ticker.strip()
     ]
     if not tickers:
@@ -60,6 +69,42 @@ def load_watchlist(watchlist_path: Path | None) -> tuple[StockProfile, ...]:
         )
 
     return tuple(StockProfile(ticker=ticker, name=ticker, business="Not configured") for ticker in tickers)
+
+
+def _load_all_stock_universe() -> tuple[StockProfile, ...]:
+    raw_markets = os.getenv("STOCK_UNIVERSE", DEFAULT_STOCK_UNIVERSE)
+    thai_universe_path = Path(os.getenv("STOCK_UNIVERSE_TH_FILE", str(DEFAULT_THAI_UNIVERSE_PATH)))
+    symbol_limit = get_optional_int_env("MAX_SYMBOLS_PER_RUN", DEFAULT_MAX_SYMBOLS_PER_RUN)
+
+    try:
+        profiles = load_universe_profiles(
+            markets=parse_markets(raw_markets),
+            thai_universe_path=thai_universe_path,
+            symbol_limit=symbol_limit,
+        )
+    except UniverseError as exc:
+        raise ConfigError(str(exc)) from exc
+
+    if not profiles:
+        raise ConfigError("Stock universe is empty")
+    return profiles
+
+
+def get_optional_int_env(name: str, default: int | None) -> int | None:
+    raw_value = os.getenv(name, "").strip()
+    if not raw_value:
+        return default
+
+    try:
+        value = int(raw_value)
+    except ValueError as exc:
+        raise ConfigError(f"{name} must be an integer") from exc
+
+    if value < 0:
+        raise ConfigError(f"{name} must be zero or greater")
+    if value == 0:
+        return None
+    return value
 
 
 def _load_watchlist_file(watchlist_path: Path) -> tuple[StockProfile, ...]:

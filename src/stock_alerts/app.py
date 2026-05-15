@@ -23,7 +23,9 @@ def run_once(
     min_score_to_alert: int,
 ) -> int:
     sent_count = 0
+    scanned_count = 0
     for profile in profiles:
+        scanned_count += 1
         try:
             report = build_stock_report(profile, max_news_per_symbol)
         except (MarketDataError, NewsFetchError, ValueError) as exc:
@@ -41,6 +43,7 @@ def run_once(
 
         send_telegram_message(bot_token, chat_id, build_report_message(report))
         sent_count += 1
+    LOGGER.info("Scanned %s stock(s)", scanned_count)
     return sent_count
 
 

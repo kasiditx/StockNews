@@ -25,8 +25,10 @@
 - Source code: `src/stock_alerts/`
 - Tests: `tests/`
 - Config ตัวอย่าง: `.env.example`, `config/watchlist.example.json`
+- Universe ตัวอย่าง: `config/universe.th.example.csv`
 - Secret จริง: `.env` เท่านั้น และถูก ignore แล้ว
 - Watchlist จริง: `config/watchlist.json` และถูก ignore แล้ว
+- Thai universe จริง: `config/universe.th.csv` และถูก ignore แล้ว
 
 Dependency หลัก:
 
@@ -46,6 +48,7 @@ Dependency หลัก:
 - `src/stock_alerts/news.py`: ดึงและ parse ข่าว
 - `src/stock_alerts/reporter.py`: format ข้อความ Telegram
 - `src/stock_alerts/telegram.py`: ส่ง Telegram message
+- `src/stock_alerts/universe.py`: โหลดรายชื่อหุ้นแบบ broad universe เช่น US และ TH
 - `src/stock_alerts/models.py`: dataclass สำหรับ data contract
 
 อย่าย้าย responsibility ข้ามโมดูลโดยไม่จำเป็น เช่น อย่าใส่ business logic หนักใน `cli.py` และอย่าให้ `analysis.py` ไปเรียก Telegram โดยตรง
@@ -161,6 +164,8 @@ pytest
 - Telegram API ต้องมี timeout และไม่ log token
 - ถ้าต้องเพิ่ม provider ใหม่ ให้แยก adapter หรือ function ตาม pattern เดิม และเพิ่ม test
 - อย่าใส่ข้อมูลหุ้นตัวอย่างที่ทำให้เข้าใจว่าเป็นคำแนะนำจริง ให้ระบุว่าเป็น example เท่านั้น
+- ถ้าใช้ `STOCK_WATCHLIST=ALL` ต้องคุม `MAX_SYMBOLS_PER_RUN` เพื่อเลี่ยง runtime ยาวและ rate limit
+- สำหรับตลาดไทย ให้ใช้ `config/universe.th.csv` ที่มาจากแหล่งข้อมูลปัจจุบันและเชื่อถือได้ อย่า hardcode รายชื่อทั้งหมดใน source code
 
 ## รูปแบบการตอบผู้ใช้
 
