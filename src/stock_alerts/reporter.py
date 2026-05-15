@@ -11,38 +11,21 @@ def build_digest_message(
     message_count: int = 1,
 ) -> str:
     lines = [
-        "Stock Opportunity Digest",
-        f"ชุดที่: {message_index}/{message_count}",
-        f"สแกนทั้งหมด: {scanned_count} ตัว | เข้าเกณฑ์: {matched_count} ตัว | แสดงชุดนี้: {len(reports)} ตัว",
-        "เป้าหมาย: คัดตัวที่น่าศึกษาต่อ ไม่ใช่คำสั่งซื้อขาย",
+        "📈 Stock Opportunity Digest",
+        f"🧭 ชุดที่ {message_index}/{message_count}",
+        f"🔎 สแกน {scanned_count} ตัว | เข้าเกณฑ์ {matched_count} ตัว | ชุดนี้ {len(reports)} ตัว",
+        "🎯 เป้าหมาย: คัดหุ้นที่น่าศึกษาต่อ ไม่ใช่คำสั่งซื้อขาย",
         "",
     ]
 
     for index, report in enumerate(reports, start=1):
-        signal = report.signal
-        lines.extend(
-            [
-                f"{index}. {report.profile.ticker} - {report.profile.name}",
-                f"ธุรกิจ: {report.profile.business}",
-                f"มุมมอง: {signal.stance} (score {signal.score})",
-                f"ราคา: {signal.close_price:,.2f} ({signal.change_percent:+.2f}%)",
-                _format_indicators(signal),
-                "เหตุผล: " + "; ".join(signal.reasons),
-            ]
-        )
-
-        if report.news:
-            lead_news = report.news[0]
-            lines.append(f"ข่าวนำ: {lead_news.title}: {lead_news.link}")
-        else:
-            lines.append("ข่าวนำ: ยังไม่พบข่าวจาก feed ที่ใช้")
-        lines.append("")
+        lines.extend(_format_digest_report(index, report))
 
     lines.extend(
         [
-            "อ่านแบบมืออาชีพ: ตัวที่ score สูงคือ candidate สำหรับศึกษาต่อ "
-            "ไม่ใช่การการันตีว่าจะขึ้นหรือกำไร 100-200%",
-            "ต้องตรวจงบ, valuation, catalyst, สภาพคล่อง, จุดตัดขาดทุน และขนาด position ก่อนลงทุน",
+            "⚠️ หมายเหตุ",
+            "ตัวที่ score สูงคือ candidate สำหรับศึกษาต่อ ไม่ใช่การการันตีว่าจะขึ้นหรือกำไร 100-200%",
+            "ก่อนลงทุนควรตรวจงบ, valuation, catalyst, สภาพคล่อง, จุดตัดขาดทุน และขนาด position",
         ]
     )
     return "\n".join(lines)
@@ -51,29 +34,54 @@ def build_digest_message(
 def build_report_message(report: StockReport) -> str:
     signal = report.signal
     lines = [
-        f"{report.profile.ticker} - {report.profile.name}",
-        f"ธุรกิจ: {report.profile.business}",
-        f"มุมมองระบบ: {signal.stance} (score {signal.score})",
-        f"ราคาล่าสุด: {signal.close_price:,.2f} ({signal.change_percent:+.2f}%)",
-        _format_indicators(signal),
+        f"📌 {report.profile.ticker} - {report.profile.name}",
+        f"🏢 ธุรกิจ: {report.profile.business}",
+        f"🧠 มุมมองระบบ: {signal.stance} (score {signal.score})",
+        f"💰 ราคาล่าสุด: {signal.close_price:,.2f} ({signal.change_percent:+.2f}%)",
+        "📊 " + _format_indicators(signal),
         "",
-        "เหตุผล:",
-        *[f"- {reason}" for reason in signal.reasons],
+        "✅ เหตุผล:",
+        *[f"• {reason}" for reason in signal.reasons],
     ]
 
     if report.news:
-        lines.extend(["", "ข่าวล่าสุด:"])
-        lines.extend(f"- {item.title}: {item.link}" for item in report.news)
+        lines.extend(["", "📰 ข่าวล่าสุด:"])
+        lines.extend(f"• {item.title}: {item.link}" for item in report.news)
     else:
-        lines.extend(["", "ข่าวล่าสุด: ยังไม่พบข่าวจาก feed ที่ใช้"])
+        lines.extend(["", "📰 ข่าวล่าสุด: ยังไม่พบข่าวจาก feed ที่ใช้"])
 
     lines.extend(
         [
             "",
-            "หมายเหตุ: เป็นสัญญาณช่วยคัดกรอง ไม่ใช่คำแนะนำการลงทุน",
+            "⚠️ หมายเหตุ: เป็นสัญญาณช่วยคัดกรอง ไม่ใช่คำแนะนำการลงทุน",
         ]
     )
     return "\n".join(lines)
+
+
+def _format_digest_report(index: int, report: StockReport) -> list[str]:
+    signal = report.signal
+    lines = [
+        "━━━━━━━━━━━━━━",
+        f"#{index} 📌 {report.profile.ticker} - {report.profile.name}",
+        f"🏢 {report.profile.business}",
+        f"🧠 {signal.stance} | score {signal.score}",
+        f"💰 {signal.close_price:,.2f} ({signal.change_percent:+.2f}%)",
+        f"📊 {_format_indicators(signal)}",
+        "✅ เหตุผล:",
+        *[f"• {reason}" for reason in signal.reasons],
+        _format_lead_news(report),
+        "",
+    ]
+    return lines
+
+
+def _format_lead_news(report: StockReport) -> str:
+    if not report.news:
+        return "📰 ข่าวนำ: ยังไม่พบข่าวจาก feed ที่ใช้"
+
+    lead_news = report.news[0]
+    return f"📰 ข่าวนำ: {lead_news.title}\n🔗 {lead_news.link}"
 
 
 def _format_indicators(signal: TechnicalSignal) -> str:

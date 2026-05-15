@@ -25,8 +25,9 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
 
     message = build_digest_message(reports=[report], scanned_count=100, matched_count=5)
 
-    assert "Stock Opportunity Digest" in message
-    assert "1. AAPL - Apple" in message
-    assert "สแกนทั้งหมด: 100 ตัว" in message
-    assert "ชุดที่: 1/1" in message
+    assert "📈 Stock Opportunity Digest" in message
+    assert "#1 📌 AAPL - Apple" in message
+    assert "🔎 สแกน 100 ตัว" in message
+    assert "🧭 ชุดที่ 1/1" in message
+    assert "✅ เหตุผล:" in message
     assert "ไม่ใช่การการันตี" in message
