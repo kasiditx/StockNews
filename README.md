@@ -12,6 +12,7 @@
 - สรุปว่าแต่ละบริษัททำธุรกิจอะไรจากไฟล์ config ที่ผู้ใช้กำหนดเอง
 - ให้คะแนน signal แบบโปร่งใส พร้อมเหตุผลว่าทำไมควรจับตา
 - ส่ง Telegram เป็น digest จัดอันดับเฉพาะตัวที่ score ถึง threshold
+- ลดโอกาสโดน news rate limit โดยวิเคราะห์กราฟและจัดอันดับก่อน แล้วค่อยดึงข่าวเฉพาะหุ้น top list
 
 ## ติดตั้ง
 
@@ -53,6 +54,7 @@ TOP_ALERTS_PER_RUN=10
 - ใช้ `config/universe.th.example.csv` เป็นตัวอย่าง แล้วสร้าง `config/universe.th.csv` สำหรับรายชื่อจริง
 - `MAX_SYMBOLS_PER_RUN` เป็น safety cap กัน runtime ยาวและ provider rate limit ถ้าตั้ง `0` คือไม่จำกัด
 - `TOP_ALERTS_PER_RUN` จำกัดจำนวนหุ้นเด่นสุดที่จะส่งใน Telegram ต่อรอบ
+- ข่าวจะถูกดึงเฉพาะหุ้นที่ผ่าน ranking แล้ว ไม่ดึงข่าวทุกตัวใน universe
 
 ตัวอย่างไฟล์ `config/universe.th.csv`:
 

@@ -28,7 +28,7 @@ def run_once(
     for profile in profiles:
         scanned_count += 1
         try:
-            report = build_stock_report(profile, max_news_per_symbol)
+            report = build_technical_report(profile)
         except (MarketDataError, ValueError) as exc:
             LOGGER.warning("Skipping %s: %s", profile.ticker, exc)
             continue
@@ -50,11 +50,14 @@ def run_once(
         LOGGER.info("No stocks matched the alert threshold")
         return 0
 
+    enriched_reports = [
+        attach_news(report, max_news_per_symbol=max_news_per_symbol) for report in selected_reports
+    ]
     send_telegram_message(
         bot_token,
         chat_id,
         build_digest_message(
-            reports=selected_reports,
+            reports=enriched_reports,
             scanned_count=scanned_count,
             matched_count=len(matched_reports),
         ),
@@ -85,14 +88,26 @@ def watch(
 
 
 def build_stock_report(profile: StockProfile, max_news_per_symbol: int) -> StockReport:
+    report = build_technical_report(profile)
+    return attach_news(report, max_news_per_symbol=max_news_per_symbol)
+
+
+def build_technical_report(profile: StockProfile) -> StockReport:
     history = fetch_price_history(profile.ticker)
     signal = analyze_technical_signal(profile.ticker, history)
+    return StockReport(profile=profile, signal=signal, news=())
+
+
+def attach_news(report: StockReport, max_news_per_symbol: int) -> StockReport:
+    if max_news_per_symbol <= 0:
+        return report
+
     try:
-        news = fetch_news(profile.ticker, max_news_per_symbol)
+        news = fetch_news(report.profile.ticker, max_news_per_symbol)
     except NewsFetchError as exc:
-        LOGGER.warning("News unavailable for %s: %s", profile.ticker, exc)
+        LOGGER.warning("News unavailable for %s: %s", report.profile.ticker, exc)
         news = ()
-    return StockReport(profile=profile, signal=signal, news=news)
+    return StockReport(profile=report.profile, signal=report.signal, news=news)
 
 
 def _select_top_reports(reports: list[StockReport], limit: int) -> list[StockReport]:
