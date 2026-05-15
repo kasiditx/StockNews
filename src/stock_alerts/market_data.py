@@ -1,7 +1,12 @@
 from __future__ import annotations
 
+import logging
+
 import pandas as pd
 import yfinance as yf
+
+
+logging.getLogger("yfinance").setLevel(logging.CRITICAL)
 
 
 class MarketDataError(RuntimeError):

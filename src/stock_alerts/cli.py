@@ -24,6 +24,7 @@ from stock_alerts.config import (
 def main() -> None:
     load_environment()
     logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+    logging.getLogger("yfinance").setLevel(logging.CRITICAL)
 
     parser = _build_parser()
     args = parser.parse_args()
