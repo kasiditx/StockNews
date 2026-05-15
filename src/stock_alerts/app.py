@@ -9,7 +9,7 @@ from stock_alerts.market_data import MarketDataError, fetch_price_history
 from stock_alerts.models import StockProfile, StockReport
 from stock_alerts.news import NewsFetchError, fetch_news
 from stock_alerts.reporter import build_digest_message
-from stock_alerts.telegram import send_telegram_message
+from stock_alerts.telegram import TelegramError, send_telegram_message
 
 
 LOGGER = logging.getLogger(__name__)
@@ -77,21 +77,28 @@ def run_once(
     enriched_reports = _sort_reports_by_opportunity(enriched_reports)
     message_count = _count_chunks(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE)
     LOGGER.info("Sending %s Telegram digest message(s)", message_count)
+    sent_message_count = 0
     for message_index, report_chunk in enumerate(
         _chunk_reports(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE),
         start=1,
     ):
-        send_telegram_message(
-            bot_token,
-            chat_id,
-            build_digest_message(
-                reports=report_chunk,
-                scanned_count=scanned_count,
-                matched_count=len(matched_reports),
-                message_index=message_index,
-                message_count=message_count,
-            ),
-        )
+        try:
+            send_telegram_message(
+                bot_token,
+                chat_id,
+                build_digest_message(
+                    reports=report_chunk,
+                    scanned_count=scanned_count,
+                    matched_count=len(matched_reports),
+                    message_index=message_index,
+                    message_count=message_count,
+                ),
+            )
+            sent_message_count += 1
+            time.sleep(1)
+        except TelegramError as exc:
+            LOGGER.warning("Telegram digest message %s/%s was not sent: %s", message_index, message_count, exc)
+    LOGGER.info("Sent %s/%s Telegram digest message(s)", sent_message_count, message_count)
     return len(selected_reports)
 
 
