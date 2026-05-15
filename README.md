@@ -44,7 +44,7 @@ STOCK_WATCHLIST=PTT.BK,AOT.BK,NVDA
 STOCK_WATCHLIST=ALL
 STOCK_UNIVERSE=US,TH
 MAX_SYMBOLS_PER_RUN=300
-TOP_ALERTS_PER_RUN=10
+TOP_ALERTS_PER_RUN=0
 ```
 
 รายละเอียด:
@@ -53,7 +53,8 @@ TOP_ALERTS_PER_RUN=10
 - `TH` โหลดจากไฟล์ `config/universe.th.csv` โดยต้องมี columns `ticker,name,business`
 - ใช้ `config/universe.th.example.csv` เป็นตัวอย่าง แล้วสร้าง `config/universe.th.csv` สำหรับรายชื่อจริง
 - `MAX_SYMBOLS_PER_RUN` เป็น safety cap กัน runtime ยาวและ provider rate limit ถ้าตั้ง `0` คือไม่จำกัด
-- `TOP_ALERTS_PER_RUN` จำกัดจำนวนหุ้นเด่นสุดที่จะส่งใน Telegram ต่อรอบ
+- `TOP_ALERTS_PER_RUN=0` ส่งทุกตัวที่เข้าเกณฑ์ ถ้าใส่เลขมากกว่า 0 จะจำกัดจำนวนต่อรอบ
+- ระบบแบ่ง Telegram digest เป็นชุดละ 10 ตัว เพื่อไม่ให้ข้อความยาวเกิน
 - ข่าวจะถูกดึงเฉพาะหุ้นที่ผ่าน ranking แล้ว ไม่ดึงข่าวทุกตัวใน universe
 
 ตัวอย่างไฟล์ `config/universe.th.csv`:

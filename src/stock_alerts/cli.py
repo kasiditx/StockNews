@@ -13,6 +13,7 @@ from stock_alerts.config import (
     DEFAULT_WATCHLIST_PATH,
     ConfigError,
     get_int_env,
+    get_optional_int_env,
     get_required_env,
     load_environment,
     load_watchlist,
@@ -32,7 +33,7 @@ def main() -> None:
         chat_id = get_required_env("TELEGRAM_CHAT_ID")
         max_news_per_symbol = get_int_env("MAX_NEWS_PER_SYMBOL", DEFAULT_MAX_NEWS_PER_SYMBOL)
         min_score_to_alert = get_int_env("MIN_SCORE_TO_ALERT", DEFAULT_MIN_SCORE_TO_ALERT)
-        top_alerts_per_run = get_int_env("TOP_ALERTS_PER_RUN", DEFAULT_TOP_ALERTS_PER_RUN)
+        top_alerts_per_run = get_optional_int_env("TOP_ALERTS_PER_RUN", DEFAULT_TOP_ALERTS_PER_RUN)
 
         if args.command == "run-once":
             sent_count = run_once(

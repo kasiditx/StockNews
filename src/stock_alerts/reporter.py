@@ -7,10 +7,13 @@ def build_digest_message(
     reports: list[StockReport],
     scanned_count: int,
     matched_count: int,
+    message_index: int = 1,
+    message_count: int = 1,
 ) -> str:
     lines = [
         "Stock Opportunity Digest",
-        f"สแกนทั้งหมด: {scanned_count} ตัว | เข้าเกณฑ์: {matched_count} ตัว | แสดง: {len(reports)} ตัว",
+        f"ชุดที่: {message_index}/{message_count}",
+        f"สแกนทั้งหมด: {scanned_count} ตัว | เข้าเกณฑ์: {matched_count} ตัว | แสดงชุดนี้: {len(reports)} ตัว",
         "เป้าหมาย: คัดตัวที่น่าศึกษาต่อ ไม่ใช่คำสั่งซื้อขาย",
         "",
     ]

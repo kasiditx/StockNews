@@ -13,6 +13,7 @@ from stock_alerts.telegram import send_telegram_message
 
 
 LOGGER = logging.getLogger(__name__)
+REPORTS_PER_TELEGRAM_MESSAGE = 10
 
 
 def run_once(
@@ -21,7 +22,7 @@ def run_once(
     chat_id: str,
     max_news_per_symbol: int,
     min_score_to_alert: int,
-    top_alerts_per_run: int,
+    top_alerts_per_run: int | None,
 ) -> int:
     scanned_count = 0
     matched_reports: list[StockReport] = []
@@ -45,7 +46,7 @@ def run_once(
         matched_reports.append(report)
 
     LOGGER.info("Scanned %s stock(s)", scanned_count)
-    selected_reports = _select_top_reports(matched_reports, top_alerts_per_run)
+    selected_reports = _select_reports(matched_reports, top_alerts_per_run)
     if not selected_reports:
         LOGGER.info("No stocks matched the alert threshold")
         return 0
@@ -53,15 +54,21 @@ def run_once(
     enriched_reports = [
         attach_news(report, max_news_per_symbol=max_news_per_symbol) for report in selected_reports
     ]
-    send_telegram_message(
-        bot_token,
-        chat_id,
-        build_digest_message(
-            reports=enriched_reports,
-            scanned_count=scanned_count,
-            matched_count=len(matched_reports),
-        ),
-    )
+    for message_index, report_chunk in enumerate(
+        _chunk_reports(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE),
+        start=1,
+    ):
+        send_telegram_message(
+            bot_token,
+            chat_id,
+            build_digest_message(
+                reports=report_chunk,
+                scanned_count=scanned_count,
+                matched_count=len(matched_reports),
+                message_index=message_index,
+                message_count=_count_chunks(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE),
+            ),
+        )
     return len(selected_reports)
 
 
@@ -71,7 +78,7 @@ def watch(
     chat_id: str,
     max_news_per_symbol: int,
     min_score_to_alert: int,
-    top_alerts_per_run: int,
+    top_alerts_per_run: int | None,
     interval_minutes: int,
 ) -> None:
     while True:
@@ -110,8 +117,8 @@ def attach_news(report: StockReport, max_news_per_symbol: int) -> StockReport:
     return StockReport(profile=report.profile, signal=report.signal, news=news)
 
 
-def _select_top_reports(reports: list[StockReport], limit: int) -> list[StockReport]:
-    return sorted(
+def _select_reports(reports: list[StockReport], limit: int | None) -> list[StockReport]:
+    sorted_reports = sorted(
         reports,
         key=lambda report: (
             report.signal.score,
@@ -119,4 +126,17 @@ def _select_top_reports(reports: list[StockReport], limit: int) -> list[StockRep
             report.signal.close_price,
         ),
         reverse=True,
-    )[:limit]
+    )
+    if limit is None:
+        return sorted_reports
+    return sorted_reports[:limit]
+
+
+def _chunk_reports(reports: list[StockReport], chunk_size: int) -> list[list[StockReport]]:
+    return [reports[index : index + chunk_size] for index in range(0, len(reports), chunk_size)]
+
+
+def _count_chunks(reports: list[StockReport], chunk_size: int) -> int:
+    if not reports:
+        return 0
+    return ((len(reports) - 1) // chunk_size) + 1

@@ -28,4 +28,5 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
     assert "Stock Opportunity Digest" in message
     assert "1. AAPL - Apple" in message
     assert "สแกนทั้งหมด: 100 ตัว" in message
+    assert "ชุดที่: 1/1" in message
     assert "ไม่ใช่การการันตี" in message
