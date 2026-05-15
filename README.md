@@ -46,8 +46,9 @@ STOCK_WATCHLIST=PTT.BK,AOT.BK,NVDA
 STOCK_WATCHLIST=ALL
 STOCK_UNIVERSE=US
 MAX_SYMBOLS_PER_RUN=0
-TOP_ALERTS_PER_RUN=0
-MAX_NEWS_LOOKUPS_PER_RUN=50
+TOP_ALERTS_PER_RUN=20
+MAX_NEWS_LOOKUPS_PER_RUN=20
+MIN_SCORE_TO_ALERT=4
 ```
 
 รายละเอียด:
@@ -58,11 +59,13 @@ MAX_NEWS_LOOKUPS_PER_RUN=50
 - `TH` โหลดจากไฟล์ `config/universe.th.csv` โดยต้องมี columns `ticker,name,business`
 - ใช้ `config/universe.th.example.csv` เป็นตัวอย่าง แล้วสร้าง `config/universe.th.csv` สำหรับรายชื่อจริง
 - `MAX_SYMBOLS_PER_RUN=0` คือไม่จำกัดจำนวนหุ้น ถ้าใส่เลขมากกว่า 0 จะเป็น safety cap กัน runtime ยาวและ provider rate limit
-- `TOP_ALERTS_PER_RUN=0` ส่งทุกตัวที่เข้าเกณฑ์ ถ้าใส่เลขมากกว่า 0 จะจำกัดจำนวนต่อรอบ
+- `MIN_SCORE_TO_ALERT=4` คัดเฉพาะ technical setup ที่แรงขึ้น
+- `TOP_ALERTS_PER_RUN=20` ส่งเฉพาะ candidate ที่ดีที่สุดต่อรอบ ถ้าตั้ง `0` จะส่งทุกตัวที่เข้าเกณฑ์
 - ระบบแบ่ง Telegram digest เป็นชุดละ 10 ตัว เพื่อไม่ให้ข้อความยาวเกิน
 - ข่าวจะถูกดึงเฉพาะหุ้นที่ผ่าน ranking แล้ว ไม่ดึงข่าวทุกตัวใน universe
 - Digest จะติด tag เช่น `🚀 น่าสนใจมาก`, `🔥 ข่าวบวกแรง`, `⚠️ ข่าวลบแรง`, `📈 trend แข็งแรง`
-- `MAX_NEWS_LOOKUPS_PER_RUN` จำกัดจำนวนหุ้นที่ไปดึงข่าวต่อรอบหลังผ่าน technical filter เพื่อลดการโดน Yahoo rate limit
+- `MAX_NEWS_LOOKUPS_PER_RUN=20` จำกัดจำนวนหุ้นที่ไปดึงข่าวต่อรอบหลังผ่าน technical filter เพื่อลดการโดน Yahoo rate limit
+- โหมดนี้ตั้งใจให้ notification เหลือเฉพาะตัวที่ “น่าสนใจที่สุด” จากกราฟและข่าว ไม่ใช่ส่งทุกตัวที่ผ่านขั้นต่ำ
 
 ตัวอย่างไฟล์ `config/universe.th.csv`:
 

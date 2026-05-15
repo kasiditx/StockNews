@@ -14,7 +14,7 @@ def build_digest_message(
         "📈 Stock Opportunity Digest",
         f"🧭 ชุดที่ {message_index}/{message_count}",
         f"🔎 สแกน {scanned_count} ตัว | เข้าเกณฑ์ {matched_count} ตัว | ชุดนี้ {len(reports)} ตัว",
-        "🎯 เป้าหมาย: คัดหุ้นที่น่าศึกษาต่อ ไม่ใช่คำสั่งซื้อขาย",
+        "🎯 เป้าหมาย: คัด high-conviction candidate จากกราฟ+ข่าว ไม่ใช่คำสั่งซื้อขาย",
         "",
     ]
 
