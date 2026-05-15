@@ -1,0 +1,1 @@
+"""Telegram stock alert package."""

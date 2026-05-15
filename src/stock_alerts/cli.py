@@ -1,0 +1,70 @@
+from __future__ import annotations
+
+import argparse
+import logging
+from pathlib import Path
+
+from stock_alerts.app import run_once, watch
+from stock_alerts.config import (
+    DEFAULT_ALERT_INTERVAL_MINUTES,
+    DEFAULT_MAX_NEWS_PER_SYMBOL,
+    DEFAULT_MIN_SCORE_TO_ALERT,
+    ConfigError,
+    get_int_env,
+    get_required_env,
+    load_environment,
+    load_watchlist,
+)
+
+
+def main() -> None:
+    load_environment()
+    logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(message)s")
+
+    parser = _build_parser()
+    args = parser.parse_args()
+
+    try:
+        profiles = load_watchlist(args.watchlist)
+        bot_token = get_required_env("TELEGRAM_BOT_TOKEN")
+        chat_id = get_required_env("TELEGRAM_CHAT_ID")
+        max_news_per_symbol = get_int_env("MAX_NEWS_PER_SYMBOL", DEFAULT_MAX_NEWS_PER_SYMBOL)
+        min_score_to_alert = get_int_env("MIN_SCORE_TO_ALERT", DEFAULT_MIN_SCORE_TO_ALERT)
+
+        if args.command == "run-once":
+            sent_count = run_once(
+                profiles=profiles,
+                bot_token=bot_token,
+                chat_id=chat_id,
+                max_news_per_symbol=max_news_per_symbol,
+                min_score_to_alert=min_score_to_alert,
+            )
+            logging.info("Sent %s Telegram alert(s)", sent_count)
+            return
+
+        interval_minutes = get_int_env("ALERT_INTERVAL_MINUTES", DEFAULT_ALERT_INTERVAL_MINUTES)
+        watch(
+            profiles=profiles,
+            bot_token=bot_token,
+            chat_id=chat_id,
+            max_news_per_symbol=max_news_per_symbol,
+            min_score_to_alert=min_score_to_alert,
+            interval_minutes=interval_minutes,
+        )
+    except ConfigError as exc:
+        parser.error(str(exc))
+
+
+def _build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description="Send Telegram stock alerts.")
+    parser.add_argument(
+        "--watchlist",
+        type=Path,
+        default=Path("config/watchlist.json"),
+        help="Path to watchlist JSON. Falls back to STOCK_WATCHLIST when the file does not exist.",
+    )
+
+    subparsers = parser.add_subparsers(dest="command", required=True)
+    subparsers.add_parser("run-once", help="Analyze configured stocks once and send matching alerts.")
+    subparsers.add_parser("watch", help="Keep analyzing and sending alerts on an interval.")
+    return parser

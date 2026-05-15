@@ -1,0 +1,19 @@
+{
+  "symbols": [
+    {
+      "ticker": "PTT.BK",
+      "name": "PTT",
+      "business": "Energy and petroleum business"
+    },
+    {
+      "ticker": "AOT.BK",
+      "name": "Airports of Thailand",
+      "business": "Airport operator"
+    },
+    {
+      "ticker": "NVDA",
+      "name": "NVIDIA",
+      "business": "GPU, AI accelerator, and data center chip business"
+    }
+  ]
+}
