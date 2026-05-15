@@ -71,11 +71,27 @@ ADVANC,Advanced Info Service,Telecommunications
 
 ## รันทันทีหนึ่งรอบ
 
+แบบคำสั่งเดียว:
+
+```bash
+./scripts/run_once.sh
+```
+
+หรือรันตรงผ่าน Python:
+
 ```bash
 python -m stock_alerts run-once --watchlist config/watchlist.json
 ```
 
 ## รันแบบเฝ้าดูต่อเนื่อง
+
+แบบคำสั่งเดียว:
+
+```bash
+./scripts/watch.sh
+```
+
+หรือรันตรงผ่าน Python:
 
 ```bash
 python -m stock_alerts watch --watchlist config/watchlist.json
