@@ -78,7 +78,13 @@ def _build_report(ticker: str, score: int, change_percent: float) -> StockReport
             sma_50=8.0,
             macd=1.0,
             macd_signal=0.9,
+            adx=30.0,
+            atr_percent=2.0,
+            bollinger_position=0.8,
+            distance_from_high_percent=-1.0,
+            trend="ขาขึ้นแข็งแรง",
             reasons=("Test reason",),
+            risk_flags=(),
         ),
         news=(),
     )

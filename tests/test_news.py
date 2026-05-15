@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from stock_alerts.news import _summarize_description
+from stock_alerts.news import _score_news_sentiment, _summarize_description
 
 
 def test_summarize_description_cleans_html() -> None:
@@ -16,3 +16,13 @@ def test_summarize_description_falls_back_to_title() -> None:
     summary = _summarize_description(None, fallback_title="Stock jumps after new contract")
 
     assert summary == "Stock jumps after new contract"
+
+
+def test_score_news_sentiment_detects_positive_catalyst() -> None:
+    sentiment, score = _score_news_sentiment(
+        title="Company beats profit estimates and raises guidance",
+        summary=None,
+    )
+
+    assert sentiment == "positive"
+    assert score >= 2

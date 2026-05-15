@@ -13,7 +13,7 @@ def fetch_price_history(ticker: str, period: str = "6mo", interval: str = "1d") 
     if history.empty:
         raise MarketDataError(f"No price history returned for {ticker}")
 
-    required_columns = {"Close", "Volume"}
+    required_columns = {"High", "Low", "Close", "Volume"}
     missing_columns = required_columns.difference(history.columns)
     if missing_columns:
         missing = ", ".join(sorted(missing_columns))

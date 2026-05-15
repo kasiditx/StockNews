@@ -15,6 +15,8 @@ class NewsItem:
     title: str
     link: str
     summary: str | None = None
+    sentiment: str = "neutral"
+    sentiment_score: int = 0
     published: str | None = None
 
 
@@ -30,7 +32,13 @@ class TechnicalSignal:
     sma_50: float | None
     macd: float | None
     macd_signal: float | None
+    adx: float | None
+    atr_percent: float | None
+    bollinger_position: float | None
+    distance_from_high_percent: float | None
+    trend: str
     reasons: tuple[str, ...]
+    risk_flags: tuple[str, ...]
 
 
 @dataclass(frozen=True)

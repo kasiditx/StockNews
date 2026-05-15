@@ -13,6 +13,55 @@ from stock_alerts.models import NewsItem
 REQUEST_TIMEOUT_SECONDS = 15
 HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
 WHITESPACE_PATTERN = re.compile(r"\s+")
+POSITIVE_NEWS_KEYWORDS = frozenset(
+    {
+        "beat",
+        "beats",
+        "upgrade",
+        "upgraded",
+        "raises",
+        "raised",
+        "growth",
+        "record",
+        "profit",
+        "profits",
+        "surge",
+        "surges",
+        "jump",
+        "jumps",
+        "contract",
+        "partnership",
+        "approval",
+        "launch",
+        "expansion",
+        "dividend",
+        "buyback",
+    }
+)
+NEGATIVE_NEWS_KEYWORDS = frozenset(
+    {
+        "miss",
+        "misses",
+        "downgrade",
+        "downgraded",
+        "cuts",
+        "cut",
+        "loss",
+        "losses",
+        "fall",
+        "falls",
+        "drop",
+        "drops",
+        "lawsuit",
+        "probe",
+        "investigation",
+        "recall",
+        "delay",
+        "weak",
+        "warning",
+        "bankruptcy",
+    }
+)
 
 
 class NewsFetchError(RuntimeError):
@@ -34,11 +83,14 @@ def fetch_news(ticker: str, limit: int) -> tuple[NewsItem, ...]:
         summary = _summarize_description(_read_child_text(item, "description"), fallback_title=title)
         published = _read_child_text(item, "pubDate")
         if title and link:
+            sentiment, sentiment_score = _score_news_sentiment(title=title, summary=summary)
             items.append(
                 NewsItem(
                     title=unescape(title),
                     link=link,
                     summary=summary,
+                    sentiment=sentiment,
+                    sentiment_score=sentiment_score,
                     published=published,
                 )
             )
@@ -74,3 +126,21 @@ def _truncate_text(value: str, max_length: int) -> str:
     if len(value) <= max_length:
         return value
     return value[: max_length - 1].rstrip() + "…"
+
+
+def _score_news_sentiment(title: str, summary: str | None) -> tuple[str, int]:
+    text = _clean_text(f"{title} {summary or ''}").lower()
+    words = set(re.findall(r"[a-z]+", text))
+    score = len(words.intersection(POSITIVE_NEWS_KEYWORDS)) - len(
+        words.intersection(NEGATIVE_NEWS_KEYWORDS)
+    )
+
+    if score >= 2:
+        return "positive", score
+    if score <= -2:
+        return "negative", score
+    if score == 1:
+        return "slightly_positive", score
+    if score == -1:
+        return "slightly_negative", score
+    return "neutral", score

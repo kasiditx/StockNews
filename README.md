@@ -7,8 +7,9 @@
 ## สิ่งที่ระบบทำ
 
 - ดึงราคาย้อนหลังของหุ้นใน watchlist
-- วิเคราะห์แนวโน้มด้วย SMA, RSI, MACD, volume และ breakout
+- วิเคราะห์แนวโน้มด้วย SMA, RSI, MACD, ADX, ATR, Bollinger position, volume และ breakout
 - ดึงข่าวล่าสุดต่อ ticker จาก Yahoo Finance RSS
+- สรุปข่าวและประเมิน tone ข่าวแบบโปร่งใสจากคำสำคัญในหัวข้อ/summary
 - สรุปว่าแต่ละบริษัททำธุรกิจอะไรจากไฟล์ config ที่ผู้ใช้กำหนดเอง
 - ให้คะแนน signal แบบโปร่งใส พร้อมเหตุผลว่าทำไมควรจับตา
 - ส่ง Telegram เป็น digest จัดอันดับเฉพาะตัวที่ score ถึง threshold
@@ -93,3 +94,13 @@ pytest
 - ถ้าข่าวไม่ขึ้น อาจเป็นข้อจำกัดของ Yahoo Finance RSS หรือ ticker ไม่รองรับ
 - Technical signal ไม่ได้ทำนายอนาคต เป็นเพียงตัวช่วยกรองหุ้นที่ควรตรวจต่อ
 - ระบบจะไม่ฟันธงว่า “ขึ้นแน่” หรือ “กำไร 100-200%” แต่จะช่วยจัดอันดับ candidate ที่ควรศึกษาต่อจากราคา, momentum, volume และข่าว
+
+## Research-backed scoring notes
+
+ระบบใช้ technical indicators ที่เป็นมาตรฐานในงาน technical analysis เช่น RSI, MACD, ADX, ATR และ Bollinger Bands เพื่อแยก trend, momentum, volatility และ breakout ออกจากกัน
+
+ข้อจำกัดที่ต้องรู้:
+
+- Indicator ไม่ใช่เครื่องทำนายอนาคต ต้องใช้ร่วมกับข่าว งบการเงิน valuation และ risk management
+- News tone ตอนนี้เป็น keyword heuristic เพื่อความเบาและโปร่งใส ไม่ใช่โมเดล sentiment ขั้นสูง
+- ถ้าต้องการ news sentiment ที่จริงจังกว่านี้ ควรเพิ่มโหมด FinBERT หรือ LLM-based financial sentiment ในรอบถัดไป
