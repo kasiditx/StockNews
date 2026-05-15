@@ -32,3 +32,4 @@ config/universe.th.csv
 .DS_Store
 .idea/
 .vscode/
+.serena/
