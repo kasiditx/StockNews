@@ -20,7 +20,13 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
             macd_signal=1.0,
             reasons=("ราคาอยู่เหนือ SMA20", "Volume สูง"),
         ),
-        news=(NewsItem(title="Apple news", link="https://example.com"),),
+        news=(
+            NewsItem(
+                title="Apple news",
+                link="https://example.com",
+                summary="Apple reported a new product catalyst.",
+            ),
+        ),
     )
 
     message = build_digest_message(reports=[report], scanned_count=100, matched_count=5)
@@ -30,4 +36,5 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
     assert "🔎 สแกน 100 ตัว" in message
     assert "🧭 ชุดที่ 1/1" in message
     assert "✅ เหตุผล:" in message
+    assert "🧾 สรุปข่าว: Apple reported a new product catalyst." in message
     assert "ไม่ใช่การการันตี" in message

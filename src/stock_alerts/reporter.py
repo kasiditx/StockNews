@@ -46,7 +46,14 @@ def build_report_message(report: StockReport) -> str:
 
     if report.news:
         lines.extend(["", "📰 ข่าวล่าสุด:"])
-        lines.extend(f"• {item.title}: {item.link}" for item in report.news)
+        for item in report.news:
+            lines.extend(
+                [
+                    f"• {item.title}",
+                    f"  🧾 สรุป: {_format_news_summary(item.summary)}",
+                    f"  🔗 {item.link}",
+                ]
+            )
     else:
         lines.extend(["", "📰 ข่าวล่าสุด: ยังไม่พบข่าวจาก feed ที่ใช้"])
 
@@ -81,7 +88,19 @@ def _format_lead_news(report: StockReport) -> str:
         return "📰 ข่าวนำ: ยังไม่พบข่าวจาก feed ที่ใช้"
 
     lead_news = report.news[0]
-    return f"📰 ข่าวนำ: {lead_news.title}\n🔗 {lead_news.link}"
+    return "\n".join(
+        [
+            f"📰 ข่าวนำ: {lead_news.title}",
+            f"🧾 สรุปข่าว: {_format_news_summary(lead_news.summary)}",
+            f"🔗 {lead_news.link}",
+        ]
+    )
+
+
+def _format_news_summary(summary: str | None) -> str:
+    if not summary:
+        return "feed ไม่มีสรุปข่าว ให้ตรวจรายละเอียดจากลิงก์"
+    return summary
 
 
 def _format_indicators(signal: TechnicalSignal) -> str:

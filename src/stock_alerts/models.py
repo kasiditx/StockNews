@@ -14,6 +14,7 @@ class StockProfile:
 class NewsItem:
     title: str
     link: str
+    summary: str | None = None
     published: str | None = None
 
 
