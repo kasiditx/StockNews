@@ -59,6 +59,9 @@ def main() -> None:
         )
     except ConfigError as exc:
         parser.error(str(exc))
+    except KeyboardInterrupt as exc:
+        logging.info("Stopped by user")
+        raise SystemExit(130) from exc
 
 
 def _build_parser() -> argparse.ArgumentParser:
