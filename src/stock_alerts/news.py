@@ -1,16 +1,28 @@
 from __future__ import annotations
 
 import re
+import time
 from html import unescape
 from urllib.parse import quote_plus
 from xml.etree import ElementTree
 
 import requests
+import yfinance as yf
 
 from stock_alerts.models import NewsItem
 
 
 REQUEST_TIMEOUT_SECONDS = 15
+MAX_NEWS_RETRIES = 2
+RETRY_STATUS_CODES = frozenset({429, 500, 502, 503, 504})
+REQUEST_HEADERS = {
+    "User-Agent": (
+        "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) "
+        "AppleWebKit/537.36 (KHTML, like Gecko) "
+        "Chrome/125.0 Safari/537.36"
+    ),
+    "Accept": "application/rss+xml, application/xml;q=0.9, */*;q=0.8",
+}
 HTML_TAG_PATTERN = re.compile(r"<[^>]+>")
 WHITESPACE_PATTERN = re.compile(r"\s+")
 POSITIVE_NEWS_KEYWORDS = frozenset(
@@ -69,9 +81,19 @@ class NewsFetchError(RuntimeError):
 
 
 def fetch_news(ticker: str, limit: int) -> tuple[NewsItem, ...]:
+    try:
+        return _fetch_rss_news(ticker=ticker, limit=limit)
+    except NewsFetchError as rss_error:
+        fallback_news = _fetch_yfinance_news(ticker=ticker, limit=limit)
+        if fallback_news:
+            return fallback_news
+        raise rss_error
+
+
+def _fetch_rss_news(ticker: str, limit: int) -> tuple[NewsItem, ...]:
     query = quote_plus(ticker)
     url = f"https://feeds.finance.yahoo.com/rss/2.0/headline?s={query}&region=US&lang=en-US"
-    response = requests.get(url, timeout=REQUEST_TIMEOUT_SECONDS)
+    response = _get_with_retry(url)
     if response.status_code >= 400:
         raise NewsFetchError(f"News request failed for {ticker} with HTTP {response.status_code}")
 
@@ -97,6 +119,78 @@ def fetch_news(ticker: str, limit: int) -> tuple[NewsItem, ...]:
         if len(items) >= limit:
             break
     return tuple(items)
+
+
+def _fetch_yfinance_news(ticker: str, limit: int) -> tuple[NewsItem, ...]:
+    news_payload = yf.Ticker(ticker).news or []
+    items: list[NewsItem] = []
+    for payload in news_payload:
+        item = _parse_yfinance_news_item(payload)
+        if item is not None:
+            items.append(item)
+        if len(items) >= limit:
+            break
+    return tuple(items)
+
+
+def _parse_yfinance_news_item(payload: object) -> NewsItem | None:
+    if not isinstance(payload, dict):
+        return None
+
+    content = payload.get("content")
+    if not isinstance(content, dict):
+        return None
+
+    title = _read_string(content, "title")
+    summary = _read_string(content, "summary") or _summarize_description(
+        _read_string(content, "description"),
+        fallback_title=title,
+    )
+    link = _read_nested_url(content, "canonicalUrl") or _read_nested_url(content, "clickThroughUrl")
+    published = _read_string(content, "pubDate") or _read_string(content, "displayTime")
+    if not title or not link:
+        return None
+
+    sentiment, sentiment_score = _score_news_sentiment(title=title, summary=summary)
+    return NewsItem(
+        title=title,
+        link=link,
+        summary=summary,
+        sentiment=sentiment,
+        sentiment_score=sentiment_score,
+        published=published,
+    )
+
+
+def _read_string(payload: dict[str, object], key: str) -> str | None:
+    value = payload.get(key)
+    if not isinstance(value, str):
+        return None
+    stripped_value = value.strip()
+    return stripped_value or None
+
+
+def _read_nested_url(payload: dict[str, object], key: str) -> str | None:
+    nested_payload = payload.get(key)
+    if not isinstance(nested_payload, dict):
+        return None
+    return _read_string(nested_payload, "url")
+
+
+def _get_with_retry(url: str) -> requests.Response:
+    last_response: requests.Response | None = None
+    for attempt in range(MAX_NEWS_RETRIES + 1):
+        response = requests.get(url, headers=REQUEST_HEADERS, timeout=REQUEST_TIMEOUT_SECONDS)
+        if response.status_code not in RETRY_STATUS_CODES:
+            return response
+
+        last_response = response
+        if attempt < MAX_NEWS_RETRIES:
+            time.sleep(1 + attempt)
+
+    if last_response is None:
+        raise NewsFetchError("News request failed before receiving a response")
+    return last_response
 
 
 def _read_child_text(item: ElementTree.Element, child_name: str) -> str | None:

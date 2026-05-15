@@ -93,6 +93,7 @@ def _format_lead_news(report: StockReport) -> str:
     return "\n".join(
         [
             f"📰 ข่าวนำ: {lead_news.title}",
+            f"🕒 เวลา: {_format_published_at(lead_news.published)}",
             f"🧾 สรุปข่าว: {_format_news_summary(lead_news.summary)}",
             f"🗞️ Tone: {_format_sentiment(lead_news.sentiment, lead_news.sentiment_score)}",
             f"🔗 {lead_news.link}",
@@ -104,6 +105,12 @@ def _format_news_summary(summary: str | None) -> str:
     if not summary:
         return "feed ไม่มีสรุปข่าว ให้ตรวจรายละเอียดจากลิงก์"
     return summary
+
+
+def _format_published_at(published: str | None) -> str:
+    if not published:
+        return "ไม่ระบุ"
+    return published
 
 
 def _format_indicators(signal: TechnicalSignal) -> str:

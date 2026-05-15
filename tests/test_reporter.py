@@ -33,6 +33,7 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
                 summary="Apple reported a new product catalyst.",
                 sentiment="positive",
                 sentiment_score=2,
+                published="2026-05-15T16:22:53Z",
             ),
         ),
     )
@@ -45,6 +46,7 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
     assert "🧭 ชุดที่ 1/1" in message
     assert "✅ เหตุผล:" in message
     assert "🧾 สรุปข่าว: Apple reported a new product catalyst." in message
+    assert "🕒 เวลา: 2026-05-15T16:22:53Z" in message
     assert "📈 Trend: ขาขึ้นแข็งแรง" in message
     assert "🗞️ Tone: บวก (+2)" in message
     assert "⚠️ จุดที่ต้องระวัง:" in message

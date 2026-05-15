@@ -51,9 +51,15 @@ def run_once(
         LOGGER.info("No stocks matched the alert threshold")
         return 0
 
+    LOGGER.info(
+        "Preparing digest for %s matched stock(s); fetching news for selected reports",
+        len(selected_reports),
+    )
     enriched_reports = [
         attach_news(report, max_news_per_symbol=max_news_per_symbol) for report in selected_reports
     ]
+    message_count = _count_chunks(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE)
+    LOGGER.info("Sending %s Telegram digest message(s)", message_count)
     for message_index, report_chunk in enumerate(
         _chunk_reports(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE),
         start=1,
@@ -66,7 +72,7 @@ def run_once(
                 scanned_count=scanned_count,
                 matched_count=len(matched_reports),
                 message_index=message_index,
-                message_count=_count_chunks(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE),
+                message_count=message_count,
             ),
         )
     return len(selected_reports)

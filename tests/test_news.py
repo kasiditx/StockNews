@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from stock_alerts.news import _score_news_sentiment, _summarize_description
+from stock_alerts.news import _parse_yfinance_news_item, _score_news_sentiment, _summarize_description
 
 
 def test_summarize_description_cleans_html() -> None:
@@ -26,3 +26,22 @@ def test_score_news_sentiment_detects_positive_catalyst() -> None:
 
     assert sentiment == "positive"
     assert score >= 2
+
+
+def test_parse_yfinance_news_item_reads_nested_content() -> None:
+    item = _parse_yfinance_news_item(
+        {
+            "content": {
+                "title": "Company beats profit estimates",
+                "summary": "Revenue growth remains strong.",
+                "pubDate": "2026-05-15T16:22:53Z",
+                "canonicalUrl": {"url": "https://example.com/news"},
+            }
+        }
+    )
+
+    assert item is not None
+    assert item.title == "Company beats profit estimates"
+    assert item.summary == "Revenue growth remains strong."
+    assert item.link == "https://example.com/news"
+    assert item.published == "2026-05-15T16:22:53Z"
