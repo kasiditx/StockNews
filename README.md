@@ -43,17 +43,18 @@ STOCK_WATCHLIST=PTT.BK,AOT.BK,NVDA
 
 ```bash
 STOCK_WATCHLIST=ALL
-STOCK_UNIVERSE=US,TH
-MAX_SYMBOLS_PER_RUN=300
+STOCK_UNIVERSE=US
+MAX_SYMBOLS_PER_RUN=0
 TOP_ALERTS_PER_RUN=0
 ```
 
 รายละเอียด:
 
 - `US` ดึงรายชื่อหุ้นจาก Nasdaq Trader symbol directory และกรอง ETF/test issue ออก
+- ถ้าต้องการรวมไทยด้วย ให้ตั้ง `STOCK_UNIVERSE=US,TH` และสร้างไฟล์ `config/universe.th.csv` ก่อน
 - `TH` โหลดจากไฟล์ `config/universe.th.csv` โดยต้องมี columns `ticker,name,business`
 - ใช้ `config/universe.th.example.csv` เป็นตัวอย่าง แล้วสร้าง `config/universe.th.csv` สำหรับรายชื่อจริง
-- `MAX_SYMBOLS_PER_RUN` เป็น safety cap กัน runtime ยาวและ provider rate limit ถ้าตั้ง `0` คือไม่จำกัด
+- `MAX_SYMBOLS_PER_RUN=0` คือไม่จำกัดจำนวนหุ้น ถ้าใส่เลขมากกว่า 0 จะเป็น safety cap กัน runtime ยาวและ provider rate limit
 - `TOP_ALERTS_PER_RUN=0` ส่งทุกตัวที่เข้าเกณฑ์ ถ้าใส่เลขมากกว่า 0 จะจำกัดจำนวนต่อรอบ
 - ระบบแบ่ง Telegram digest เป็นชุดละ 10 ตัว เพื่อไม่ให้ข้อความยาวเกิน
 - ข่าวจะถูกดึงเฉพาะหุ้นที่ผ่าน ranking แล้ว ไม่ดึงข่าวทุกตัวใน universe
@@ -90,6 +91,8 @@ python -m stock_alerts run-once --watchlist config/watchlist.json
 ```bash
 ./scripts/watch.sh
 ```
+
+ถ้า `.env` ตั้ง `STOCK_WATCHLIST=ALL` script จะไม่ใช้ `config/watchlist.json` แม้ไฟล์นี้จะมีอยู่ และจะสแกน universe ตาม `STOCK_UNIVERSE`
 
 หรือรันตรงผ่าน Python:
 

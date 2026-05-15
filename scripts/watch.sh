@@ -13,8 +13,9 @@ fi
 cd "$ROOT_DIR"
 
 COMMAND=("$PYTHON_BIN" -m stock_alerts watch)
+STOCK_WATCHLIST_VALUE="$(grep -E '^STOCK_WATCHLIST=' "$ROOT_DIR/.env" 2>/dev/null | tail -n 1 | cut -d '=' -f 2- | tr -d '[:space:]' | tr '[:lower:]' '[:upper:]')"
 
-if [[ -f "$WATCHLIST_PATH" && "$*" != *"--watchlist"* && "$*" != *"-h"* && "$*" != *"--help"* ]]; then
+if [[ -f "$WATCHLIST_PATH" && "$STOCK_WATCHLIST_VALUE" != "ALL" && "$STOCK_WATCHLIST_VALUE" != "*" && "$*" != *"--watchlist"* && "$*" != *"-h"* && "$*" != *"--help"* ]]; then
   COMMAND+=(--watchlist "$WATCHLIST_PATH")
 fi
 
