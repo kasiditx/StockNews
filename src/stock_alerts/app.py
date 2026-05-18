@@ -9,11 +9,12 @@ from stock_alerts.market_data import MarketDataError, fetch_price_history
 from stock_alerts.models import StockProfile, StockReport
 from stock_alerts.news import NewsFetchError, fetch_news
 from stock_alerts.reporter import build_digest_message
-from stock_alerts.telegram import TelegramError, send_telegram_message
+from stock_alerts.telegram import TELEGRAM_MAX_MESSAGE_LENGTH, TelegramError, send_telegram_message
 
 
 LOGGER = logging.getLogger(__name__)
 REPORTS_PER_TELEGRAM_MESSAGE = 10
+TELEGRAM_SAFE_MESSAGE_LENGTH = TELEGRAM_MAX_MESSAGE_LENGTH - 250
 
 
 def run_once(
@@ -75,13 +76,16 @@ def run_once(
     if unavailable_news_count:
         LOGGER.info("News unavailable for %s selected stock(s)", unavailable_news_count)
     enriched_reports = _sort_reports_by_opportunity(enriched_reports)
-    message_count = _count_chunks(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE)
+    report_chunks = _chunk_reports_for_telegram(
+        reports=enriched_reports,
+        scanned_count=scanned_count,
+        matched_count=len(matched_reports),
+        max_length=TELEGRAM_SAFE_MESSAGE_LENGTH,
+    )
+    message_count = len(report_chunks)
     LOGGER.info("Sending %s Telegram digest message(s)", message_count)
     sent_message_count = 0
-    for message_index, report_chunk in enumerate(
-        _chunk_reports(enriched_reports, REPORTS_PER_TELEGRAM_MESSAGE),
-        start=1,
-    ):
+    for message_index, report_chunk in enumerate(report_chunks, start=1):
         try:
             send_telegram_message(
                 bot_token,
@@ -216,3 +220,30 @@ def _count_chunks(reports: list[StockReport], chunk_size: int) -> int:
     if not reports:
         return 0
     return ((len(reports) - 1) // chunk_size) + 1
+
+
+def _chunk_reports_for_telegram(
+    reports: list[StockReport],
+    scanned_count: int,
+    matched_count: int,
+    max_length: int,
+) -> list[list[StockReport]]:
+    chunks: list[list[StockReport]] = []
+    current_chunk: list[StockReport] = []
+
+    for report in reports:
+        candidate_chunk = [*current_chunk, report]
+        candidate_message = build_digest_message(
+            reports=candidate_chunk,
+            scanned_count=scanned_count,
+            matched_count=matched_count,
+        )
+        if current_chunk and len(candidate_message) > max_length:
+            chunks.append(current_chunk)
+            current_chunk = [report]
+            continue
+        current_chunk = candidate_chunk
+
+    if current_chunk:
+        chunks.append(current_chunk)
+    return chunks

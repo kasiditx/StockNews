@@ -17,7 +17,10 @@ class TelegramError(RuntimeError):
 
 def send_telegram_message(bot_token: str, chat_id: str, text: str) -> None:
     if len(text) > TELEGRAM_MAX_MESSAGE_LENGTH:
-        text = text[: TELEGRAM_MAX_MESSAGE_LENGTH - 20] + "\n...(truncated)"
+        raise TelegramError(
+            f"Telegram message is too long: {len(text)} characters "
+            f"(max {TELEGRAM_MAX_MESSAGE_LENGTH})"
+        )
 
     url = f"https://api.telegram.org/bot{bot_token}/sendMessage"
     response: requests.Response | None = None

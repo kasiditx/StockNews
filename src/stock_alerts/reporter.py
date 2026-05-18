@@ -2,6 +2,12 @@ from __future__ import annotations
 
 from stock_alerts.models import StockReport, TechnicalSignal
 
+MAX_DIGEST_NEWS_TITLE_LENGTH = 160
+MAX_DIGEST_NEWS_SUMMARY_LENGTH = 180
+MAX_DIGEST_TEXT_LENGTH = 140
+MAX_DIGEST_REASONS = 3
+MAX_DIGEST_RISK_FLAGS = 2
+
 
 def build_digest_message(
     reports: list[StockReport],
@@ -70,15 +76,15 @@ def _format_digest_report(index: int, report: StockReport) -> list[str]:
     signal = report.signal
     lines = [
         "━━━━━━━━━━━━━━",
-        f"#{index} 📌 {report.profile.ticker} - {report.profile.name}",
-        f"🏢 {report.profile.business}",
+        f"#{index} 📌 {report.profile.ticker} - {_shorten(report.profile.name, MAX_DIGEST_TEXT_LENGTH)}",
+        f"🏢 {_shorten(report.profile.business, MAX_DIGEST_TEXT_LENGTH)}",
         f"🧠 {signal.stance} | technical {signal.score} | opportunity {_calculate_opportunity_score(report)}",
         f"🏷️ {_format_tags(report)}",
         f"📈 Trend: {signal.trend}",
         f"💰 {signal.close_price:,.2f} ({signal.change_percent:+.2f}%)",
         f"📊 {_format_indicators(signal)}",
         "✅ เหตุผล:",
-        *[f"• {reason}" for reason in signal.reasons],
+        *[f"• {_shorten(reason, MAX_DIGEST_TEXT_LENGTH)}" for reason in signal.reasons[:MAX_DIGEST_REASONS]],
         *_format_risk_flags(signal),
         _format_lead_news(report),
         "",
@@ -93,9 +99,9 @@ def _format_lead_news(report: StockReport) -> str:
     lead_news = report.news[0]
     return "\n".join(
         [
-            f"📰 ข่าวนำ: {lead_news.title}",
+            f"📰 ข่าวนำ: {_shorten(lead_news.title, MAX_DIGEST_NEWS_TITLE_LENGTH)}",
             f"🕒 เวลา: {_format_published_at(lead_news.published)}",
-            f"🧾 สรุปข่าว: {_format_news_summary(lead_news.summary)}",
+            f"🧾 สรุปข่าว: {_shorten(_format_news_summary(lead_news.summary), MAX_DIGEST_NEWS_SUMMARY_LENGTH)}",
             f"🗞️ Tone: {_format_sentiment(lead_news.sentiment, lead_news.sentiment_score)}",
             f"🔗 {lead_news.link}",
         ]
@@ -132,7 +138,10 @@ def _format_indicators(signal: TechnicalSignal) -> str:
 def _format_risk_flags(signal: TechnicalSignal) -> list[str]:
     if not signal.risk_flags:
         return []
-    return ["⚠️ จุดที่ต้องระวัง:", *[f"• {risk_flag}" for risk_flag in signal.risk_flags]]
+    return [
+        "⚠️ จุดที่ต้องระวัง:",
+        *[f"• {_shorten(risk_flag, MAX_DIGEST_TEXT_LENGTH)}" for risk_flag in signal.risk_flags[:MAX_DIGEST_RISK_FLAGS]],
+    ]
 
 
 def _format_sentiment(sentiment: str, score: int) -> str:
@@ -187,3 +196,10 @@ def _format_percent(value: float | None) -> str:
     if value is None:
         return "-"
     return f"{value:+.2f}%"
+
+
+def _shorten(value: str, max_length: int) -> str:
+    normalized_value = " ".join(value.split())
+    if len(normalized_value) <= max_length:
+        return normalized_value
+    return normalized_value[: max_length - 1].rstrip() + "…"

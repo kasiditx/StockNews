@@ -32,3 +32,24 @@ def test_send_telegram_message_retries_rate_limit(monkeypatch) -> None:
     telegram.send_telegram_message("token", "chat", "hello")
 
     assert sleep_calls == [3]
+
+
+def test_send_telegram_message_rejects_oversized_text_before_posting(monkeypatch) -> None:
+    post_called = False
+
+    def fake_post(url, json, timeout):
+        nonlocal post_called
+        post_called = True
+        return _FakeResponse(200)
+
+    monkeypatch.setattr(telegram.requests, "post", fake_post)
+
+    long_text = "x" * (telegram.TELEGRAM_MAX_MESSAGE_LENGTH + 1)
+    try:
+        telegram.send_telegram_message("token", "chat", long_text)
+    except telegram.TelegramError as exc:
+        assert "too long" in str(exc)
+    else:
+        raise AssertionError("expected TelegramError")
+
+    assert post_called is False

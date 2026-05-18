@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from stock_alerts.app import run_once
+from stock_alerts.app import _chunk_reports_for_telegram, run_once
 from stock_alerts.models import NewsItem, StockProfile, StockReport, TechnicalSignal
 
 
@@ -137,7 +137,29 @@ def test_run_once_limits_news_lookups_after_technical_filter(monkeypatch) -> Non
     assert fetched_news_for == ["AAA"]
 
 
-def _build_report(ticker: str, score: int, change_percent: float) -> StockReport:
+def test_digest_chunks_are_limited_by_message_length() -> None:
+    reports = [
+        _build_report(f"AAA{index}", score=5, change_percent=1.0, reason="x" * 500)
+        for index in range(4)
+    ]
+
+    chunks = _chunk_reports_for_telegram(
+        reports=reports,
+        scanned_count=100,
+        matched_count=4,
+        max_length=1100,
+    )
+
+    assert len(chunks) > 1
+    assert all(chunks)
+
+
+def _build_report(
+    ticker: str,
+    score: int,
+    change_percent: float,
+    reason: str = "Test reason",
+) -> StockReport:
     return StockReport(
         profile=StockProfile(ticker=ticker, name=ticker, business="Test"),
         signal=TechnicalSignal(
@@ -156,7 +178,7 @@ def _build_report(ticker: str, score: int, change_percent: float) -> StockReport
             bollinger_position=0.8,
             distance_from_high_percent=-1.0,
             trend="ขาขึ้นแข็งแรง",
-            reasons=("Test reason",),
+            reasons=(reason,),
             risk_flags=(),
         ),
         news=(),
