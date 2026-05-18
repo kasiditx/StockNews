@@ -45,6 +45,7 @@ STOCK_WATCHLIST=PTT.BK,AOT.BK,NVDA
 ```bash
 STOCK_WATCHLIST=ALL
 STOCK_UNIVERSE=US
+STOCK_SECTORS=Technology,Industrials,Services,Financials,Consumer Products
 MAX_SYMBOLS_PER_RUN=0
 TOP_ALERTS_PER_RUN=20
 MAX_NEWS_LOOKUPS_PER_RUN=20
@@ -53,10 +54,13 @@ MIN_SCORE_TO_ALERT=4
 
 รายละเอียด:
 
-- `US` ดึงรายชื่อหุ้นจาก Nasdaq Trader symbol directory และกรอง ETF/test issue ออก
+- `US` ดึงรายชื่อหุ้นจาก Nasdaq screener เพื่อใช้ `sector`/`industry` กรองกลุ่มธุรกิจ และ fallback ไป Nasdaq Trader symbol directory เฉพาะตอนที่ไม่ได้ตั้ง sector filter
 - Universe US จะกรอง preferred, warrant, unit, right และ instrument ที่ไม่ใช่ common stock ออก เพื่อลด ticker ที่ Yahoo ไม่มีราคา
+- `STOCK_SECTORS` คุมกลุ่มธุรกิจที่ต้องการสแกน ถ้าเว้นว่างจะไม่กรอง sector
+- ค่า default นี้เลือกเฉพาะกลุ่มที่คุณระบุ: Technology, Industrials, Services, Financials และ Consumer Products
+- เนื่องจาก provider ใช้ชื่อ sector ไม่เหมือนไทยทั้งหมด ระบบ map `Services` ไปที่ `Consumer Discretionary`, `Telecommunications`, `Miscellaneous` และ map `Consumer Products` ไปที่ `Consumer Staples`, `Consumer Discretionary`
 - ถ้าต้องการรวมไทยด้วย ให้ตั้ง `STOCK_UNIVERSE=US,TH` และสร้างไฟล์ `config/universe.th.csv` ก่อน
-- `TH` โหลดจากไฟล์ `config/universe.th.csv` โดยต้องมี columns `ticker,name,business`
+- `TH` โหลดจากไฟล์ `config/universe.th.csv` โดยต้องมี columns `ticker,name,business` และใส่ `sector,industry` เพิ่มได้เพื่อใช้กรองกลุ่มธุรกิจ
 - ใช้ `config/universe.th.example.csv` เป็นตัวอย่าง แล้วสร้าง `config/universe.th.csv` สำหรับรายชื่อจริง
 - `MAX_SYMBOLS_PER_RUN=0` คือไม่จำกัดจำนวนหุ้น ถ้าใส่เลขมากกว่า 0 จะเป็น safety cap กัน runtime ยาวและ provider rate limit
 - `MIN_SCORE_TO_ALERT=4` คัดเฉพาะ technical setup ที่แรงขึ้น
@@ -70,10 +74,10 @@ MIN_SCORE_TO_ALERT=4
 ตัวอย่างไฟล์ `config/universe.th.csv`:
 
 ```csv
-ticker,name,business
-PTT,PTT,Energy and petroleum business
-AOT,Airports of Thailand,Airport operator
-ADVANC,Advanced Info Service,Telecommunications
+ticker,name,business,sector,industry
+PTT,PTT,Energy and petroleum business,Energy,Oil and Gas
+AOT,Airports of Thailand,Airport operator,Services,Transportation
+ADVANC,Advanced Info Service,Telecommunications,Services,Telecommunications
 ```
 
 ระบบจะเติม `.BK` ให้อัตโนมัติสำหรับ ticker ไทยที่ยังไม่มี suffix

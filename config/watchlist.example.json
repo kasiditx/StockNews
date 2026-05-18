@@ -13,7 +13,9 @@
     {
       "ticker": "NVDA",
       "name": "NVIDIA",
-      "business": "GPU, AI accelerator, and data center chip business"
+      "business": "GPU, AI accelerator, and data center chip business",
+      "sector": "Technology",
+      "industry": "Semiconductors"
     }
   ]
 }

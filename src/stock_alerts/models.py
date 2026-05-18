@@ -8,6 +8,8 @@ class StockProfile:
     ticker: str
     name: str
     business: str
+    sector: str | None = None
+    industry: str | None = None
 
 
 @dataclass(frozen=True)
