@@ -15,6 +15,7 @@
 - ดึงข่าวล่าสุดต่อ ticker จาก Yahoo Finance RSS
 - สรุปข่าวและประเมิน tone ข่าวแบบโปร่งใสจากคำสำคัญในหัวข้อ/summary
 - จัดอันดับด้วย opportunity score หลังรวม technical score และ news tone
+- ประเมินผลตาม Investor SOP ใน [docs/INVESTOR_SOP.md](docs/INVESTOR_SOP.md) ผ่านโมดูล `stock_alerts.sop`
 - สรุปว่าแต่ละบริษัททำธุรกิจอะไรจากไฟล์ config ที่ผู้ใช้กำหนดเอง
 - ให้คะแนน signal แบบโปร่งใส พร้อมเหตุผลว่าทำไมควรจับตา
 - ส่ง Telegram เป็น digest จัดอันดับเฉพาะตัวที่ score ถึง threshold

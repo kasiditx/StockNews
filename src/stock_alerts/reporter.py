@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from stock_alerts.models import StockReport, TechnicalSignal
+from stock_alerts.sop import assess_report_with_sop, calculate_opportunity_score, strongest_news_score_for
 
 MAX_DIGEST_NEWS_TITLE_LENGTH = 160
 MAX_DIGEST_NEWS_SUMMARY_LENGTH = 180
@@ -75,13 +76,15 @@ def build_report_message(report: StockReport) -> str:
 
 def _format_digest_report(index: int, report: StockReport) -> list[str]:
     signal = report.signal
+    sop_assessment = assess_report_with_sop(report)
     lines = [
         "━━━━━━━━━━━━━━",
         f"#{index} 📌 {report.profile.ticker} - {_shorten(report.profile.name, MAX_DIGEST_TEXT_LENGTH)}",
         f"🏢 ทำอะไร: {_shorten(report.profile.business, MAX_DIGEST_TEXT_LENGTH)}",
-        f"🧩 จำเป็นต่อ: {_format_business_importance(report)}",
+        f"🧩 จำเป็นต่อ: {sop_assessment.business_importance}",
         f"🧠 {signal.stance} | technical {signal.score} | opportunity {_calculate_opportunity_score(report)}",
-        f"🔮 โอกาสขึ้น: {_format_upside_view(report)}",
+        f"🔮 โอกาสขึ้น: {sop_assessment.upside_view}",
+        f"🧭 SOP next step: {sop_assessment.decision_note}",
         f"🏷️ {_format_tags(report)}",
         f"📈 Trend: {signal.trend}",
         f"💰 {signal.close_price:,.2f} ({signal.change_percent:+.2f}%)",
@@ -100,13 +103,14 @@ def _format_lead_news(report: StockReport) -> str:
         return "📰 ข่าวนำ: ยังไม่พบข่าวจาก feed ที่ใช้"
 
     lead_news = report.news[0]
+    sop_assessment = assess_report_with_sop(report)
     return "\n".join(
         [
             f"📰 ข่าวนำ: {_shorten(lead_news.title, MAX_DIGEST_NEWS_TITLE_LENGTH)}",
             f"🕒 เวลา: {_format_published_at(lead_news.published)}",
             f"🧾 สรุปข่าว: {_shorten(_format_news_summary(lead_news.summary), MAX_DIGEST_NEWS_SUMMARY_LENGTH)}",
             f"🗞️ Tone: {_format_sentiment(lead_news.sentiment, lead_news.sentiment_score)}",
-            f"🧠 วิเคราะห์ข่าว: {_format_news_impact(report)}",
+            f"🧠 วิเคราะห์ข่าว: {sop_assessment.news_impact}",
             f"🔗 {lead_news.link}",
         ]
     )
@@ -182,61 +186,12 @@ def _format_tags(report: StockReport) -> str:
     return " | ".join(tags) if tags else "รอติดตามต่อ"
 
 
-def _format_upside_view(report: StockReport) -> str:
-    opportunity_score = _calculate_opportunity_score(report)
-    signal = report.signal
-
-    if opportunity_score >= 8 and signal.trend == "ขาขึ้นแข็งแรง" and not signal.risk_flags:
-        return "สูงมากถ้าข่าว/volume หนุนต่อ แต่ต้องรอจังหวะและจุดตัดขาดทุน"
-    if opportunity_score >= 7:
-        return "สูง เหมาะติดตาม breakout/ข่าวต่อเนื่อง"
-    if opportunity_score >= 5:
-        return "ปานกลางถึงสูง ต้องยืนยันด้วยข่าวและแรงซื้อรอบถัดไป"
-    if opportunity_score >= 3:
-        return "เริ่มน่าสนใจ แต่ยังต้องรอสัญญาณยืนยัน"
-    return "ยังไม่เด่นพอ เน้นเฝ้าดูมากกว่าตัดสินใจทันที"
-
-
-def _format_news_impact(report: StockReport) -> str:
-    strongest_news_score = _strongest_news_score(report)
-    if not report.news:
-        return "ยังไม่มีข่าวให้ยืนยัน ต้องพึ่งกราฟเป็นหลัก"
-    if strongest_news_score >= 3:
-        return "ข่าวบวกแรง อาจเป็น catalyst เพิ่มแรงซื้อถ้าตลาดตอบรับต่อ"
-    if strongest_news_score >= 1:
-        return "ข่าวเอนบวก ช่วยหนุน sentiment แต่ยังควรดู volume/ราคา follow-through"
-    if strongest_news_score <= -3:
-        return "ข่าวลบแรง อาจกด upside หรือทำให้ผันผวนสูง"
-    if strongest_news_score <= -1:
-        return "ข่าวเอนลบ ต้องระวังแรงขายหรือ sentiment แผ่ว"
-    return "ข่าวกลาง ๆ ยังไม่ใช่ catalyst หลัก"
-
-
-def _format_business_importance(report: StockReport) -> str:
-    text = f"{report.profile.business} {report.profile.sector or ''} {report.profile.industry or ''}".lower()
-    if any(keyword in text for keyword in ("semiconductor", "ai", "artificial intelligence", "chip")):
-        return "โครงสร้างพื้นฐาน AI/data center และ supply chain ชิป"
-    if any(keyword in text for keyword in ("software", "cloud", "cybersecurity")):
-        return "ระบบดิจิทัลขององค์กร, cloud, data และ productivity"
-    if any(keyword in text for keyword in ("bank", "finance", "payment", "insurance", "asset management")):
-        return "ระบบการเงิน, credit, payment และการหมุนเวียนเงินในเศรษฐกิจ"
-    if any(keyword in text for keyword in ("aerospace", "defense", "machinery", "industrial", "logistics", "transportation", "trucking")):
-        return "โครงสร้างเศรษฐกิจจริง เช่น การผลิต, ขนส่ง, logistics และความมั่นคง"
-    if any(keyword in text for keyword in ("health", "medical", "biotechnology", "drug")):
-        return "บริการสุขภาพ ยา และโครงสร้างพื้นฐานทางการแพทย์"
-    if any(keyword in text for keyword in ("media", "advertising", "internet", "retail", "travel", "consumer")):
-        return "พฤติกรรมผู้บริโภค, แพลตฟอร์มออนไลน์, โฆษณา และบริการรายวัน"
-    if any(keyword in text for keyword in ("telecommunication", "communication")):
-        return "โครงข่ายสื่อสารและ connectivity สำหรับผู้ใช้/องค์กร"
-    return "ธุรกิจในห่วงโซ่เศรษฐกิจของกลุ่มที่คัดไว้ ควรอ่านรายละเอียดเพิ่มก่อนตัดสินใจ"
-
-
 def _calculate_opportunity_score(report: StockReport) -> int:
-    return report.signal.score + _strongest_news_score(report)
+    return calculate_opportunity_score(report)
 
 
 def _strongest_news_score(report: StockReport) -> int:
-    return max((news_item.sentiment_score for news_item in report.news), default=0)
+    return strongest_news_score_for(report)
 
 
 def _format_optional(value: float | None) -> str:

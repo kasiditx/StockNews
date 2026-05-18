@@ -45,6 +45,7 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
     assert "🏢 ทำอะไร: Consumer technology" in message
     assert "🧩 จำเป็นต่อ:" in message
     assert "🔮 โอกาสขึ้น:" in message
+    assert "🧭 SOP next step:" in message
     assert "🔎 สแกน 100 ตัว" in message
     assert "🧭 ชุดที่ 1/1" in message
     assert "✅ เหตุผล:" in message
