@@ -41,15 +41,23 @@ def build_digest_message(
 
 def build_report_message(report: StockReport) -> str:
     signal = report.signal
+    sop_assessment = assess_report_with_sop(report)
     lines = [
         f"📌 {report.profile.ticker} - {report.profile.name}",
-        f"🏢 ธุรกิจ: {report.profile.business}",
-        f"🧠 มุมมองระบบ: {signal.stance} (score {signal.score})",
+        f"🏢 ทำอะไร: {_shorten(report.profile.business, MAX_DIGEST_TEXT_LENGTH)}",
+        f"🧩 จำเป็นต่อ: {sop_assessment.business_importance}",
+        f"🧠 มุมมองระบบ: {signal.stance} | technical {signal.score} | opportunity {_calculate_opportunity_score(report)}",
+        f"🔮 โอกาสขึ้น: {sop_assessment.upside_view}",
+        f"🧭 SOP next step: {sop_assessment.decision_note}",
         f"💰 ราคาล่าสุด: {signal.close_price:,.2f} ({signal.change_percent:+.2f}%)",
-        "📊 " + _format_indicators(signal),
+        f"📈 Trend: {signal.trend}",
+        f"📊 {_format_indicators(signal)}",
+        f"🧮 {_format_advanced_indicators(signal)}",
+        *_format_technical_plan(signal),
         "",
         "✅ เหตุผล:",
-        *[f"• {reason}" for reason in signal.reasons],
+        *[f"• {_shorten(reason, MAX_DIGEST_TEXT_LENGTH)}" for reason in signal.reasons[:MAX_DIGEST_REASONS]],
+        *_format_risk_flags(signal),
     ]
 
     if report.news:
@@ -57,8 +65,9 @@ def build_report_message(report: StockReport) -> str:
         for item in report.news:
             lines.extend(
                 [
-                    f"• {item.title}",
-                    f"  🧾 สรุป: {_format_news_summary(item.summary)}",
+                    f"• {_shorten(item.title, MAX_DIGEST_NEWS_TITLE_LENGTH)}",
+                    f"  🧾 สรุป: {_shorten(_format_news_summary(item.summary), MAX_DIGEST_NEWS_SUMMARY_LENGTH)}",
+                    f"  🗞️ Tone: {_format_sentiment(item.sentiment, item.sentiment_score)}",
                     f"  🔗 {item.link}",
                 ]
             )
@@ -68,6 +77,7 @@ def build_report_message(report: StockReport) -> str:
     lines.extend(
         [
             "",
+            f"🧠 วิเคราะห์ข่าวรวม: {sop_assessment.news_impact}",
             "⚠️ หมายเหตุ: เป็นสัญญาณช่วยคัดกรอง ไม่ใช่คำแนะนำการลงทุน",
         ]
     )

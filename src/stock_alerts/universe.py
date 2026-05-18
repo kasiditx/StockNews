@@ -153,6 +153,13 @@ EXTRA_GROUP_PROFILES = {
     ),
 }
 PROFILE_OVERRIDES = {
+    "APLD": StockProfile(
+        ticker="APLD",
+        name="Applied Digital Corporation",
+        business="Technology / AI data center and high-performance computing infrastructure",
+        sector="Technology",
+        industry="AI Data Center Infrastructure",
+    ),
     "BRK-A": StockProfile(
         ticker="BRK-A",
         name="Berkshire Hathaway Inc. Class A",

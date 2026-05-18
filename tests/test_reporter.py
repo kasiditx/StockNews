@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from stock_alerts.models import NewsItem, StockProfile, StockReport, TechnicalSignal
-from stock_alerts.reporter import build_digest_message
+from stock_alerts.reporter import build_digest_message, build_report_message
 
 
 def test_build_digest_message_includes_ranked_context_and_warning() -> None:
@@ -106,3 +106,63 @@ def test_build_digest_message_can_continue_rank_across_chunks() -> None:
     )
 
     assert "#4 📌 MSFT - Microsoft" in message
+
+
+def test_build_report_message_uses_sop_format_and_short_news() -> None:
+    report = StockReport(
+        profile=StockProfile(
+            ticker="APLD",
+            name="Applied Digital",
+            business="Technology / AI data center infrastructure",
+            sector="Technology",
+            industry="AI Data Center Infrastructure",
+        ),
+        signal=TechnicalSignal(
+            ticker="APLD",
+            score=5,
+            stance="น่าจับตามองมาก",
+            close_price=42.56,
+            change_percent=-8.88,
+            rsi=65.32,
+            sma_20=37.97,
+            sma_50=31.26,
+            macd=4.04,
+            macd_signal=3.48,
+            adx=34.71,
+            atr_percent=8.17,
+            bollinger_position=0.7,
+            distance_from_high_percent=-8.88,
+            trend="ขาขึ้นแข็งแรง",
+            reasons=("trend หลักเป็นขาขึ้น",),
+            risk_flags=("ATR สูง",),
+            rsi_fast=61.0,
+            rsi_slow=59.0,
+            plus_di=32.0,
+            minus_di=12.0,
+            atr_stop_loss=38.0,
+            atr_take_profit_2x=47.0,
+            atr_take_profit_3x=50.0,
+            technical_plan=("ATR plan: stop ประมาณ 38.00",),
+        ),
+        news=(
+            NewsItem(
+                title="Applied Digital closes bridge loan for AI data center expansion",
+                link="https://example.com/apld",
+                summary="Applied Digital closed a large bridge loan to fund AI data center construction. "
+                * 10,
+                sentiment="positive",
+                sentiment_score=2,
+            ),
+        ),
+    )
+
+    message = build_report_message(report)
+
+    assert "🏢 ทำอะไร: Technology / AI data center infrastructure" in message
+    assert "🧩 จำเป็นต่อ: โครงสร้างพื้นฐาน AI/data center" in message
+    assert "🔮 โอกาสขึ้น:" in message
+    assert "🧭 SOP next step:" in message
+    assert "🧮 RSI5/14/21:" in message
+    assert "🗺️ Technical plan:" in message
+    assert "🧠 วิเคราะห์ข่าวรวม:" in message
+    assert len(message) < 4096
