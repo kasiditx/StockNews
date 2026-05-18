@@ -14,7 +14,11 @@ class MarketDataError(RuntimeError):
 
 
 def fetch_price_history(ticker: str, period: str = "6mo", interval: str = "1d") -> pd.DataFrame:
-    history = yf.Ticker(ticker).history(period=period, interval=interval, auto_adjust=True)
+    try:
+        history = yf.Ticker(ticker).history(period=period, interval=interval, auto_adjust=True)
+    except Exception as exc:
+        raise MarketDataError(f"Price history request failed for {ticker}: {exc}") from exc
+
     if history.empty:
         raise MarketDataError(f"No price history returned for {ticker}")
 
