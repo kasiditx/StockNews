@@ -437,6 +437,22 @@ TL;DR:
 
 ## 12. Bot Operations
 
+### Telegram command/chat
+
+เมื่อ bot รันด้วย `watch` หรือ LaunchAgent ผู้ใช้สามารถพิมพ์คำสั่งใน Telegram ได้:
+
+```text
+/help        ดูคำสั่งทั้งหมด
+/status      เช็กสถานะ bot และรอบล่าสุด
+/top         ดู Top 10 ล่าสุดใน memory
+/analyze NVDA วิเคราะห์กราฟ+ข่าว+SOP ของ ticker
+/why NVDA    เหมือน /analyze ใช้ถามว่าทำไมน่าสนใจ
+/news MSFT   ดูข่าวล่าสุดของ ticker
+NVDA         พิมพ์ ticker เปล่า ๆ เพื่อวิเคราะห์ทันที
+```
+
+หมายเหตุ: `/top` จะมีข้อมูลหลังจากรอบ scan จบแล้วอย่างน้อยหนึ่งครั้ง ส่วน `/analyze TICKER` จะดึงข้อมูลใหม่แบบ on-demand
+
 คำสั่งเช็ก bot:
 
 ```bash

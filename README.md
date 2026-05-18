@@ -115,6 +115,20 @@ python -m stock_alerts run-once --watchlist config/watchlist.json
 
 ถ้า `.env` ตั้ง `STOCK_WATCHLIST=ALL` script จะไม่ใช้ `config/watchlist.json` แม้ไฟล์นี้จะมีอยู่ และจะสแกน universe ตาม `STOCK_UNIVERSE`
 
+เมื่อรัน `watch` ระบบจะเปิด Telegram command/chat polling ใน process เดียวกันด้วย จึงพิมพ์ถาม bot ใน Telegram ได้:
+
+```text
+/help
+/status
+/top
+/analyze NVDA
+/why NVDA
+/news MSFT
+NVDA
+```
+
+คำสั่ง `NVDA` แบบไม่ใส่ slash จะถูกตีความเป็น `/analyze NVDA`
+
 หรือรันตรงผ่าน Python:
 
 ```bash

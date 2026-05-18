@@ -10,6 +10,7 @@ from stock_alerts.models import StockProfile, StockReport
 from stock_alerts.news import NewsFetchError, fetch_news
 from stock_alerts.reporter import build_digest_message
 from stock_alerts.telegram import TELEGRAM_MAX_MESSAGE_LENGTH, TelegramError, send_telegram_message
+from stock_alerts.telegram_bot import TelegramBotState, start_telegram_command_bot, update_latest_reports
 
 
 LOGGER = logging.getLogger(__name__)
@@ -25,6 +26,7 @@ def run_once(
     max_news_lookups_per_run: int | None,
     min_score_to_alert: int,
     top_alerts_per_run: int | None,
+    command_state: TelegramBotState | None = None,
 ) -> int:
     scanned_count = 0
     below_threshold_count = 0
@@ -76,6 +78,13 @@ def run_once(
     if unavailable_news_count:
         LOGGER.info("News unavailable for %s selected stock(s)", unavailable_news_count)
     enriched_reports = _sort_reports_by_opportunity(enriched_reports)
+    if command_state is not None:
+        update_latest_reports(
+            command_state,
+            reports=enriched_reports,
+            scanned_count=scanned_count,
+            matched_count=len(matched_reports),
+        )
     report_chunks = _chunk_reports_for_telegram(
         reports=enriched_reports,
         scanned_count=scanned_count,
@@ -119,15 +128,26 @@ def watch(
     top_alerts_per_run: int | None,
     interval_minutes: int,
 ) -> None:
+    profile_list = tuple(profiles)
+    command_state = TelegramBotState()
+    start_telegram_command_bot(
+        profiles=profile_list,
+        bot_token=bot_token,
+        chat_id=chat_id,
+        max_news_per_symbol=max_news_per_symbol,
+        top_alerts_per_run=top_alerts_per_run,
+        state=command_state,
+    )
     while True:
         sent_count = run_once(
-            profiles=profiles,
+            profiles=profile_list,
             bot_token=bot_token,
             chat_id=chat_id,
             max_news_per_symbol=max_news_per_symbol,
             max_news_lookups_per_run=max_news_lookups_per_run,
             min_score_to_alert=min_score_to_alert,
             top_alerts_per_run=top_alerts_per_run,
+            command_state=command_state,
         )
         LOGGER.info("Sent %s Telegram alert(s)", sent_count)
         time.sleep(interval_minutes * 60)
