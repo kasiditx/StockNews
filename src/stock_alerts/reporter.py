@@ -89,6 +89,8 @@ def _format_digest_report(index: int, report: StockReport) -> list[str]:
         f"📈 Trend: {signal.trend}",
         f"💰 {signal.close_price:,.2f} ({signal.change_percent:+.2f}%)",
         f"📊 {_format_indicators(signal)}",
+        f"🧮 {_format_advanced_indicators(signal)}",
+        *_format_technical_plan(signal),
         "✅ เหตุผล:",
         *[f"• {_shorten(reason, MAX_DIGEST_TEXT_LENGTH)}" for reason in signal.reasons[:MAX_DIGEST_REASONS]],
         *_format_risk_flags(signal),
@@ -141,6 +143,27 @@ def _format_indicators(signal: TechnicalSignal) -> str:
         f"RSI: {rsi} | SMA20: {sma_20} | SMA50: {sma_50} | MACD: {macd}/{macd_signal} | "
         f"ADX: {adx} | ATR: {atr_percent} | 60D high: {high_distance}"
     )
+
+
+def _format_advanced_indicators(signal: TechnicalSignal) -> str:
+    rsi_fast = _format_optional(signal.rsi_fast)
+    rsi_default = _format_optional(signal.rsi)
+    rsi_slow = _format_optional(signal.rsi_slow)
+    plus_di = _format_optional(signal.plus_di)
+    minus_di = _format_optional(signal.minus_di)
+    stop = _format_optional(signal.atr_stop_loss)
+    target_2x = _format_optional(signal.atr_take_profit_2x)
+    target_3x = _format_optional(signal.atr_take_profit_3x)
+    return (
+        f"RSI5/14/21: {rsi_fast}/{rsi_default}/{rsi_slow} | "
+        f"+DI/-DI: {plus_di}/{minus_di} | ATR stop/TP: {stop}/{target_2x}/{target_3x}"
+    )
+
+
+def _format_technical_plan(signal: TechnicalSignal) -> list[str]:
+    if not signal.technical_plan:
+        return []
+    return ["🗺️ Technical plan:", *[f"• {_shorten(item, MAX_DIGEST_TEXT_LENGTH)}" for item in signal.technical_plan]]
 
 
 def _format_risk_flags(signal: TechnicalSignal) -> list[str]:

@@ -23,6 +23,14 @@ def test_analyze_technical_signal_detects_positive_trend() -> None:
     assert "SMA20" in " ".join(signal.reasons)
     assert signal.trend in {"ขาขึ้นแข็งแรง", "ขาขึ้นระยะสั้น"}
     assert signal.adx is not None
+    assert signal.rsi_fast is not None
+    assert signal.rsi_slow is not None
+    assert signal.plus_di is not None
+    assert signal.minus_di is not None
+    assert signal.atr_stop_loss is not None
+    assert signal.atr_take_profit_2x is not None
+    assert signal.atr_take_profit_3x is not None
+    assert signal.technical_plan
 
 
 def test_analyze_technical_signal_requires_enough_history() -> None:

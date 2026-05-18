@@ -41,6 +41,14 @@ class TechnicalSignal:
     trend: str
     reasons: tuple[str, ...]
     risk_flags: tuple[str, ...]
+    rsi_fast: float | None = None
+    rsi_slow: float | None = None
+    plus_di: float | None = None
+    minus_di: float | None = None
+    atr_stop_loss: float | None = None
+    atr_take_profit_2x: float | None = None
+    atr_take_profit_3x: float | None = None
+    technical_plan: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)

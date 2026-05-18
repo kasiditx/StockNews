@@ -25,6 +25,14 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
             trend="ขาขึ้นแข็งแรง",
             reasons=("ราคาอยู่เหนือ SMA20", "Volume สูง"),
             risk_flags=("ATR สูง",),
+            rsi_fast=60.0,
+            rsi_slow=52.0,
+            plus_di=30.0,
+            minus_di=15.0,
+            atr_stop_loss=191.0,
+            atr_take_profit_2x=212.0,
+            atr_take_profit_3x=218.0,
+            technical_plan=("SMA setup: trend ขาขึ้นระยะสั้น",),
         ),
         news=(
             NewsItem(
@@ -52,6 +60,9 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
     assert "🧾 สรุปข่าว: Apple reported a new product catalyst." in message
     assert "🕒 เวลา: 2026-05-15T16:22:53Z" in message
     assert "📈 Trend: ขาขึ้นแข็งแรง" in message
+    assert "RSI5/14/21:" in message
+    assert "ATR stop/TP:" in message
+    assert "🗺️ Technical plan:" in message
     assert "🗞️ Tone: บวก (+2)" in message
     assert "🧠 วิเคราะห์ข่าว:" in message
     assert "🔥 ข่าวบวกแรง" in message
