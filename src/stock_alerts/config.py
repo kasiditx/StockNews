@@ -8,7 +8,13 @@ from typing import Any
 from dotenv import load_dotenv
 
 from stock_alerts.models import StockProfile
-from stock_alerts.universe import UniverseError, load_universe_profiles, parse_markets, parse_sectors
+from stock_alerts.universe import (
+    DEFAULT_STOCK_GROUPS,
+    UniverseError,
+    build_group_filter,
+    load_universe_profiles,
+    parse_markets,
+)
 
 
 DEFAULT_ALERT_INTERVAL_MINUTES = 60
@@ -18,7 +24,7 @@ DEFAULT_MIN_SCORE_TO_ALERT = 4
 DEFAULT_TOP_ALERTS_PER_RUN = 20
 DEFAULT_MAX_SYMBOLS_PER_RUN = 300
 DEFAULT_STOCK_UNIVERSE = "US,TH"
-DEFAULT_STOCK_SECTORS = "Technology,Industrials,Services,Financials,Consumer Products"
+DEFAULT_STOCK_SECTORS = ""
 DEFAULT_THAI_UNIVERSE_PATH = Path("config/universe.th.csv")
 DEFAULT_WATCHLIST_PATH = Path("config/watchlist.json")
 ALL_STOCKS_SENTINELS = frozenset({"ALL", "*"})
@@ -84,6 +90,7 @@ def load_watchlist(watchlist_path: Path | None) -> tuple[StockProfile, ...]:
 
 def _load_all_stock_universe() -> tuple[StockProfile, ...]:
     raw_markets = os.getenv("STOCK_UNIVERSE", DEFAULT_STOCK_UNIVERSE)
+    raw_groups = os.getenv("STOCK_GROUPS", DEFAULT_STOCK_GROUPS)
     raw_sectors = os.getenv("STOCK_SECTORS", DEFAULT_STOCK_SECTORS)
     thai_universe_path = Path(os.getenv("STOCK_UNIVERSE_TH_FILE", str(DEFAULT_THAI_UNIVERSE_PATH)))
     symbol_limit = get_optional_int_env("MAX_SYMBOLS_PER_RUN", DEFAULT_MAX_SYMBOLS_PER_RUN)
@@ -93,7 +100,7 @@ def _load_all_stock_universe() -> tuple[StockProfile, ...]:
             markets=parse_markets(raw_markets),
             thai_universe_path=thai_universe_path,
             symbol_limit=symbol_limit,
-            sectors=parse_sectors(raw_sectors),
+            group_filter=build_group_filter(raw_groups=raw_groups, raw_sectors=raw_sectors),
         )
     except UniverseError as exc:
         raise ConfigError(str(exc)) from exc

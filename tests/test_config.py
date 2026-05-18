@@ -69,6 +69,7 @@ def test_all_watchlist_loads_thai_universe_file(monkeypatch, tmp_path) -> None:
     )
     monkeypatch.setenv("STOCK_WATCHLIST", "ALL")
     monkeypatch.setenv("STOCK_UNIVERSE", "TH")
+    monkeypatch.setenv("STOCK_GROUPS", "")
     monkeypatch.setenv("STOCK_SECTORS", "")
     monkeypatch.setenv("STOCK_UNIVERSE_TH_FILE", str(thai_universe))
     monkeypatch.setenv("MAX_SYMBOLS_PER_RUN", "1")
@@ -81,6 +82,7 @@ def test_all_watchlist_loads_thai_universe_file(monkeypatch, tmp_path) -> None:
 def test_all_watchlist_requires_thai_universe_file(monkeypatch, tmp_path) -> None:
     monkeypatch.setenv("STOCK_WATCHLIST", "ALL")
     monkeypatch.setenv("STOCK_UNIVERSE", "TH")
+    monkeypatch.setenv("STOCK_GROUPS", "")
     monkeypatch.setenv("STOCK_SECTORS", "")
     monkeypatch.setenv("STOCK_UNIVERSE_TH_FILE", str(tmp_path / "missing.csv"))
 
