@@ -42,6 +42,9 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
 
     assert "📈 Stock Opportunity Digest" in message
     assert "#1 📌 AAPL - Apple" in message
+    assert "🏢 ทำอะไร: Consumer technology" in message
+    assert "🧩 จำเป็นต่อ:" in message
+    assert "🔮 โอกาสขึ้น:" in message
     assert "🔎 สแกน 100 ตัว" in message
     assert "🧭 ชุดที่ 1/1" in message
     assert "✅ เหตุผล:" in message
@@ -49,6 +52,7 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
     assert "🕒 เวลา: 2026-05-15T16:22:53Z" in message
     assert "📈 Trend: ขาขึ้นแข็งแรง" in message
     assert "🗞️ Tone: บวก (+2)" in message
+    assert "🧠 วิเคราะห์ข่าว:" in message
     assert "🔥 ข่าวบวกแรง" in message
     assert "opportunity 6" in message
     assert "⚠️ จุดที่ต้องระวัง:" in message
