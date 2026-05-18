@@ -57,3 +57,40 @@ def test_build_digest_message_includes_ranked_context_and_warning() -> None:
     assert "opportunity 6" in message
     assert "⚠️ จุดที่ต้องระวัง:" in message
     assert "ไม่ใช่การการันตี" in message
+
+
+def test_build_digest_message_can_continue_rank_across_chunks() -> None:
+    report = StockReport(
+        profile=StockProfile(ticker="MSFT", name="Microsoft", business="Cloud software"),
+        signal=TechnicalSignal(
+            ticker="MSFT",
+            score=5,
+            stance="น่าจับตามองมาก",
+            close_price=400.0,
+            change_percent=1.2,
+            rsi=58.0,
+            sma_20=390.0,
+            sma_50=370.0,
+            macd=1.5,
+            macd_signal=1.0,
+            adx=25.0,
+            atr_percent=2.0,
+            bollinger_position=0.7,
+            distance_from_high_percent=-3.0,
+            trend="ขาขึ้นแข็งแรง",
+            reasons=("Momentum ยังดี",),
+            risk_flags=(),
+        ),
+        news=(),
+    )
+
+    message = build_digest_message(
+        reports=[report],
+        scanned_count=100,
+        matched_count=10,
+        message_index=2,
+        message_count=4,
+        rank_start=4,
+    )
+
+    assert "#4 📌 MSFT - Microsoft" in message

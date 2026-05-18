@@ -85,6 +85,7 @@ def run_once(
     message_count = len(report_chunks)
     LOGGER.info("Sending %s Telegram digest message(s)", message_count)
     sent_message_count = 0
+    rank_start = 1
     for message_index, report_chunk in enumerate(report_chunks, start=1):
         try:
             send_telegram_message(
@@ -96,9 +97,11 @@ def run_once(
                     matched_count=len(matched_reports),
                     message_index=message_index,
                     message_count=message_count,
+                    rank_start=rank_start,
                 ),
             )
             sent_message_count += 1
+            rank_start += len(report_chunk)
             time.sleep(1)
         except TelegramError as exc:
             LOGGER.warning("Telegram digest message %s/%s was not sent: %s", message_index, message_count, exc)

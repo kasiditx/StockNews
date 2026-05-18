@@ -15,6 +15,7 @@ def build_digest_message(
     matched_count: int,
     message_index: int = 1,
     message_count: int = 1,
+    rank_start: int = 1,
 ) -> str:
     lines = [
         "📈 Stock Opportunity Digest",
@@ -24,7 +25,7 @@ def build_digest_message(
         "",
     ]
 
-    for index, report in enumerate(reports, start=1):
+    for index, report in enumerate(reports, start=rank_start):
         lines.extend(_format_digest_report(index, report))
 
     lines.extend(
